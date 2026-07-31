@@ -15,7 +15,16 @@ kotlin {
     jvm("desktop")
 
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                // Multiplatform HTTP client core — engine-agnostic on purpose.
+                // Real engines (OkHttp for Android, CIO for Desktop, Darwin for
+                // iOS later) get added when networking code actually moves
+                // here in Phase 2. This step just proves the dependency
+                // resolves for every target we have configured so far.
+                implementation("io.ktor:ktor-client-core:3.5.1")
+            }
+        }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
