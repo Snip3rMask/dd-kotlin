@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="8dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_card_ripple"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginTop="6dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/ep_number"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_icon_square"
+        android:textColor="@color/primary"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/ep_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/ep_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_tertiary"
+        android:textSize="11sp"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/ep_download"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_download"
+        android:background="@drawable/bg_icon_circle"
+        android:tint="@color/primary"
+        android:padding="6dp" />
+
+</LinearLayout>

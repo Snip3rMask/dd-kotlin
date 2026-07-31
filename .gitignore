@@ -1,0 +1,20 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/app/build
+*.apk
+*.aab
+*.hprof
+*.md
+
+# Keystore
+app/release.keystore
+release.keystore
+app/release.keystore.base64.txt

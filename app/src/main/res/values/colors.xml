@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Theme Colors -->
+    <color name="background">#F8F9FA</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F0F1F3</color>
+    <color name="surface_high">#E8EAED</color>
+    <color name="divider">#DADCE0</color>
+
+    <!-- Sky Blue Accent (same) -->
+    <color name="primary">#0EA5E9</color>
+    <color name="primary_dark">#0284C7</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="accent">#0EA5E9</color>
+
+    <!-- Text -->
+    <color name="text_primary">#202124</color>
+    <color name="text_secondary">#5F6368</color>
+    <color name="text_tertiary">#80868B</color>
+
+    <!-- Status -->
+    <color name="error">#D93025</color>
+    <color name="success">#1E8E3E</color>
+    <color name="warning">#F9AB00</color>
+    <color name="overlay">#B3FFFFFF</color>
+    <color name="scrim">#66000000</color>
+
+    <!-- Icon badge backgrounds -->
+    <color name="icon_bg">#E7F4FD</color>
+    <color name="icon_bg_danger">#FBE8E8</color>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="folder_icon" type="id"/>
+    <item name="group_status" type="id"/>
+    <item name="folder_delete" type="id"/>
+</resources>

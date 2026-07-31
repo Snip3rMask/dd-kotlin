@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="8dp"
+        android:background="@color/background">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_icon_circle"
+            android:src="@drawable/ic_back"
+            android:padding="8dp"
+            android:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/downloads"
+            android:textColor="@color/text_primary"
+            android:textSize="17sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/btn_sort"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_sort"
+                android:background="@drawable/bg_icon_circle"
+                android:tint="@color/primary"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_clear_finished"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:background="@drawable/bg_chip"
+                android:text="@string/clear_finished"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:paddingHorizontal="14dp"
+                android:layout_marginStart="4dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/downloads_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingVertical="8dp" />
+
+        <TextView
+            android:id="@+id/empty_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/no_downloads"
+            android:textColor="@color/text_tertiary"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

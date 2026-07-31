@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Blue circle background -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0z" />
+
+    <!-- Arrow vertical shaft -->
+    <path
+        android:fillColor="#0C1922"
+        android:pathData="M50,30v28M44,48l10,10 10,-10"
+        android:strokeWidth="5"
+        android:strokeColor="#0C1922"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Base horizontal bar -->
+    <path
+        android:fillColor="#0C1922"
+        android:pathData="M36,72h36"
+        android:strokeWidth="5"
+        android:strokeColor="#0C1922"
+        android:strokeLineCap="round" />
+
+</vector>
