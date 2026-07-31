@@ -1,6 +1,8 @@
 package msr.mirudl.app;
 
 import msr.mirudl.shared.model.AnimeItem;
+import msr.mirudl.shared.model.EpisodeItem;
+import msr.mirudl.shared.model.VideoSource;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

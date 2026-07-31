@@ -1,5 +1,8 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.EpisodeItem;
+import msr.mirudl.shared.model.VideoSource;
+
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;

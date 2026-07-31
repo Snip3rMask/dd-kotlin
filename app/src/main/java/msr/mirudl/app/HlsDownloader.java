@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.VideoSource;
+
 import android.content.Context;
 import android.net.Uri;
 
