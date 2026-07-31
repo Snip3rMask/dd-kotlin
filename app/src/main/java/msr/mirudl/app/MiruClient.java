@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.AnimeItem;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 

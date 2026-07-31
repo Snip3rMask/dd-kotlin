@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.AnimeItem;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

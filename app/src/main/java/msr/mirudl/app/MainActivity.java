@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.AnimeItem;
+
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
