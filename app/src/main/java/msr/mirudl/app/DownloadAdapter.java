@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.DownloadRecord;
+
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -36,10 +38,10 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public interface OnActionListener {
         void onCancel(DownloadManager.Job job);
-        void onClick(DownloadEntryStore.Entry entry);
-        void onDelete(DownloadEntryStore.Entry entry);
-        void onSelectionToggle(DownloadEntryStore.Entry entry);
-        boolean isSelected(DownloadEntryStore.Entry entry);
+        void onClick(DownloadRecord entry);
+        void onDelete(DownloadRecord entry);
+        void onSelectionToggle(DownloadRecord entry);
+        boolean isSelected(DownloadRecord entry);
         void onGroupDelete(String groupName);
         void onGroupDeleteRequest(String groupName);
     }
@@ -49,7 +51,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.listener = listener;
     }
 
-    public void setData(List<DownloadManager.Job> jobs, List<DownloadEntryStore.Entry> entries) {
+    public void setData(List<DownloadManager.Job> jobs, List<DownloadRecord> entries) {
         items.clear();
 
         // ── ACTIVE SECTION ──
@@ -65,22 +67,22 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         // ── COMPLETED SECTION — grouped by anime folder ──
         if (entries != null && !entries.isEmpty()) {
-            Map<String, List<DownloadEntryStore.Entry>> grouped = new LinkedHashMap<>();
-            for (DownloadEntryStore.Entry e : entries) {
+            Map<String, List<DownloadRecord>> grouped = new LinkedHashMap<>();
+            for (DownloadRecord e : entries) {
                 grouped.computeIfAbsent(e.parentName(), k -> new ArrayList<>()).add(e);
             }
 
             items.add("COMPLETED");
 
-            for (Map.Entry<String, List<DownloadEntryStore.Entry>> group : grouped.entrySet()) {
+            for (Map.Entry<String, List<DownloadRecord>> group : grouped.entrySet()) {
                 String folderName = group.getKey();
-                List<DownloadEntryStore.Entry> folderEntries = group.getValue();
+                List<DownloadRecord> folderEntries = group.getValue();
                 boolean isExpanded = expandedFolders.contains(folderName);
 
                 items.add(new FolderHeader(folderName, folderEntries, isExpanded));
 
                 if (isExpanded) {
-                    for (DownloadEntryStore.Entry e : folderEntries) {
+                    for (DownloadRecord e : folderEntries) {
                         items.add(e);
                     }
                 }
@@ -110,7 +112,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if (item instanceof String) return TYPE_SECTION;
         if (item instanceof FolderHeader) return TYPE_FOLDER;
         if (item instanceof DownloadManager.Job) return TYPE_ACTIVE;
-        if (item instanceof DownloadEntryStore.Entry) return TYPE_COMPLETED;
+        if (item instanceof DownloadRecord) return TYPE_COMPLETED;
         return TYPE_SECTION;
     }
 
@@ -140,7 +142,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (h instanceof ActiveHolder) {
             bindActive((ActiveHolder) h, (DownloadManager.Job) item);
         } else if (h instanceof CompletedHolder) {
-            bindCompleted((CompletedHolder) h, (DownloadEntryStore.Entry) item);
+            bindCompleted((CompletedHolder) h, (DownloadRecord) item);
         }
     }
 
@@ -387,7 +389,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         // Calculate total size
         long totalBytes = 0;
-        for (DownloadEntryStore.Entry e : fh.entries) totalBytes += e.size;
+        for (DownloadRecord e : fh.entries) totalBytes += e.size;
         String sizeStr = formatSize(totalBytes);
         String status = fh.entries.size() + " episode" + (fh.entries.size() > 1 ? "s" : "")
                 + "  \u2022  " + sizeStr;
@@ -426,7 +428,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         });
     }
 
-    private void bindCompleted(CompletedHolder h, DownloadEntryStore.Entry entry) {
+    private void bindCompleted(CompletedHolder h, DownloadRecord entry) {
         String title = entry.title != null ? entry.title : "";
         // Remove "Episode " prefix if present for cleaner display
         if (title.startsWith("Episode ")) {
@@ -497,9 +499,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     static class FolderHeader {
         final String name;
-        final List<DownloadEntryStore.Entry> entries;
+        final List<DownloadRecord> entries;
         final boolean expanded;
-        FolderHeader(String name, List<DownloadEntryStore.Entry> entries, boolean expanded) {
+        FolderHeader(String name, List<DownloadRecord> entries, boolean expanded) {
             this.name = name; this.entries = entries; this.expanded = expanded;
         }
     }

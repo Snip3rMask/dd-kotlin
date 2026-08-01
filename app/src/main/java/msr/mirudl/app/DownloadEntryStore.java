@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.DownloadRecord;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -15,24 +17,6 @@ public final class DownloadEntryStore {
     private static final String PREF = "mirudl_downloads";
     private static final String KEY = "entries";
 
-    public static final class Entry {
-        public String uri;
-        public String filePath;
-        public String title;
-        public String parent;
-        public long size;
-        public long completedAt;
-
-        public String key() {
-            if (uri != null && !uri.isEmpty()) return uri;
-            return filePath != null ? filePath : title;
-        }
-
-        public String parentName() {
-            return (parent != null && !parent.trim().isEmpty()) ? parent : "MiruDL";
-        }
-    }
-
     public enum DeleteScope {
         RECORD_ONLY,
         FILE_ONLY,
@@ -41,15 +25,15 @@ public final class DownloadEntryStore {
 
     private DownloadEntryStore() {}
 
-    public static List<Entry> all(Context context) {
-        List<Entry> items = new ArrayList<>();
+    public static List<DownloadRecord> all(Context context) {
+        List<DownloadRecord> items = new ArrayList<>();
         String raw = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .getString(KEY, "[]");
         try {
             JSONArray arr = new JSONArray(raw);
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject json = arr.getJSONObject(i);
-                Entry e = new Entry();
+                DownloadRecord e = new DownloadRecord();
                 e.uri = json.optString("uri", "");
                 e.filePath = json.optString("filePath", "");
                 e.title = json.optString("title", "");
@@ -63,9 +47,9 @@ public final class DownloadEntryStore {
         return items;
     }
 
-    public static void add(Context context, Entry entry) {
+    public static void add(Context context, DownloadRecord entry) {
         if (entry == null) return;
-        List<Entry> items = all(context);
+        List<DownloadRecord> items = all(context);
         String key = entry.key();
         boolean replaced = false;
         for (int i = 0; i < items.size(); i++) {
@@ -79,29 +63,29 @@ public final class DownloadEntryStore {
         save(context, items);
     }
 
-    public static void remove(Context context, Entry entry) {
+    public static void remove(Context context, DownloadRecord entry) {
         if (entry == null) return;
         String key = entry.key();
-        List<Entry> out = new ArrayList<>();
-        for (Entry e : all(context)) {
+        List<DownloadRecord> out = new ArrayList<>();
+        for (DownloadRecord e : all(context)) {
             if (!key.equals(e.key())) out.add(e);
         }
         save(context, out);
     }
 
-    public static void removeAll(Context context, List<Entry> entries) {
+    public static void removeAll(Context context, List<DownloadRecord> entries) {
         if (entries == null || entries.isEmpty()) return;
         Set<String> keys = new HashSet<>();
-        for (Entry e : entries) keys.add(e.key());
-        List<Entry> out = new ArrayList<>();
-        for (Entry e : all(context))
+        for (DownloadRecord e : entries) keys.add(e.key());
+        List<DownloadRecord> out = new ArrayList<>();
+        for (DownloadRecord e : all(context))
             if (!keys.contains(e.key())) out.add(e);
         save(context, out);
     }
 
-    private static void save(Context context, List<Entry> items) {
+    private static void save(Context context, List<DownloadRecord> items) {
         JSONArray arr = new JSONArray();
-        for (Entry e : items) {
+        for (DownloadRecord e : items) {
             JSONObject json = new JSONObject();
             try {
                 json.put("uri", e.uri != null ? e.uri : "");

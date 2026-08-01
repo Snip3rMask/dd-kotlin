@@ -1,6 +1,7 @@
 package msr.mirudl.app;
 
 import msr.mirudl.shared.model.AnimeItem;
+import msr.mirudl.shared.model.DownloadRecord;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -422,7 +423,7 @@ public class MainActivity extends BaseActivity {
                     refreshDownloads();
                 }
             }
-            @Override public void onClick(DownloadEntryStore.Entry entry) {
+            @Override public void onClick(DownloadRecord entry) {
                 DownloadEntry dlEntry = DownloadEntry.fromRecord(entry);
                 if (dlEntry.uri != null) {
                     try {
@@ -435,11 +436,11 @@ public class MainActivity extends BaseActivity {
                     }
                 }
             }
-            @Override public void onDelete(DownloadEntryStore.Entry entry) {
+            @Override public void onDelete(DownloadRecord entry) {
                 DownloadEntry dlEntry = DownloadEntry.fromRecord(entry);
                 showDeleteDownloadDialog(dlEntry);
             }
-            @Override public void onSelectionToggle(DownloadEntryStore.Entry entry) {
+            @Override public void onSelectionToggle(DownloadRecord entry) {
                 DownloadEntry dlEntry = DownloadEntry.fromRecord(entry);
                 String key = dlEntry.key();
                 if (selectedDownloadKeys.contains(key)) {
@@ -449,14 +450,14 @@ public class MainActivity extends BaseActivity {
                 }
                 refreshDownloads();
             }
-            @Override public boolean isSelected(DownloadEntryStore.Entry entry) {
+            @Override public boolean isSelected(DownloadRecord entry) {
                 DownloadEntry dlEntry = DownloadEntry.fromRecord(entry);
                 return selectedDownloadKeys.contains(dlEntry.key());
             }
             @Override public void onGroupDeleteRequest(String groupName) {
                 List<DownloadEntry> groupEntries = new ArrayList<>();
-                List<DownloadEntryStore.Entry> all = DownloadEntryStore.all(MainActivity.this);
-                for (DownloadEntryStore.Entry e : all) {
+                List<DownloadRecord> all = DownloadEntryStore.all(MainActivity.this);
+                for (DownloadRecord e : all) {
                     if (groupName.equals(e.parentName())) {
                         groupEntries.add(DownloadEntry.fromRecord(e));
                     }
@@ -477,7 +478,7 @@ public class MainActivity extends BaseActivity {
 
     private void refreshDownloads() {
         List<DownloadManager.Job> active = DownloadManager.snapshot();
-        List<DownloadEntryStore.Entry> completed = DownloadEntryStore.all(this);
+        List<DownloadRecord> completed = DownloadEntryStore.all(this);
 
         boolean hasActive = false;
         for (DownloadManager.Job j : active) {
@@ -492,7 +493,7 @@ public class MainActivity extends BaseActivity {
 
     private void clearFinished() {
         DownloadManager.removeFinished();
-        List<DownloadEntryStore.Entry> entries = DownloadEntryStore.all(this);
+        List<DownloadRecord> entries = DownloadEntryStore.all(this);
         if (!entries.isEmpty()) {
             new android.app.AlertDialog.Builder(this)
                     .setTitle("Clear History")

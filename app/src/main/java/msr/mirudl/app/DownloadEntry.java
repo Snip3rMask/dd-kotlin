@@ -1,19 +1,21 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.DownloadRecord;
+
 import android.content.Context;
 import android.net.Uri;
 
 import androidx.documentfile.provider.DocumentFile;
 
 public final class DownloadEntry {
-    public final DownloadEntryStore.Entry record;
+    public final DownloadRecord record;
     public final Uri uri;
     public final String title;
     public final String parent;
     public final long size;
     public final long sortStamp;
 
-    private DownloadEntry(DownloadEntryStore.Entry record) {
+    private DownloadEntry(DownloadRecord record) {
         this.record = record;
         this.uri = (record.uri != null && !record.uri.isEmpty()) ? Uri.parse(record.uri) : null;
         this.title = record.title;
@@ -22,7 +24,7 @@ public final class DownloadEntry {
         this.sortStamp = record.completedAt;
     }
 
-    public static DownloadEntry fromRecord(DownloadEntryStore.Entry record) {
+    public static DownloadEntry fromRecord(DownloadRecord record) {
         return new DownloadEntry(record);
     }
 

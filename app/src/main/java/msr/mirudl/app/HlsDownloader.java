@@ -1,5 +1,6 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.model.VideoSource;
 
 import android.content.Context;
@@ -341,7 +342,7 @@ public final class HlsDownloader {
     private static void saveDownloadEntry(Context context, String uri, String title,
                                            String parent, long size) {
         try {
-            DownloadEntryStore.Entry entry = new DownloadEntryStore.Entry();
+            DownloadRecord entry = new DownloadRecord();
             entry.uri = uri;
             entry.title = title;
             entry.parent = parent;
