@@ -18,3 +18,7 @@ local.properties
 app/release.keystore
 release.keystore
 app/release.keystore.base64.txt
+
+# Kotlin/AGP local build dirs
+.kotlin/
+/shared/build
