@@ -37,8 +37,16 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-        val androidMain by getting
-        val desktopMain by getting
+        val androidMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-okhttp:3.5.1")
+            }
+        }
+        val desktopMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-cio:3.5.1")
+            }
+        }
     }
 }
 
