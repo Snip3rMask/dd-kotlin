@@ -3,4 +3,12 @@
     <item name="folder_icon" type="id"/>
     <item name="group_status" type="id"/>
     <item name="folder_delete" type="id"/>
+    <item name="dl_anime" type="id"/>
+    <item name="dl_title" type="id"/>
+    <item name="dl_status" type="id"/>
+    <item name="dl_speed" type="id"/>
+    <item name="dl_progress" type="id"/>
+    <item name="dl_cancel" type="id"/>
+    <item name="dl_size" type="id"/>
+    <item name="dl_delete" type="id"/>
 </resources>
