@@ -51,7 +51,11 @@ jobs:
 
       - name: Build debug APK
         run: |
-          ./gradlew assembleDebug
+          # assembleDebug = Android target; compileKotlinDesktop = JVM desktop
+          # target. CI had no desktop job before, but :shared now has real
+          # desktop code (actuals), so compiling it here keeps both targets
+          # verified without a local machine.
+          ./gradlew assembleDebug :shared:compileKotlinDesktop
 
       - name: Collect APKs
         run: |
