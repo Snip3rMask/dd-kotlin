@@ -3,7 +3,7 @@ package msr.mirudl.shared.download
 import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.utils.io.errors.IOException
+import java.io.IOException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
