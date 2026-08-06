@@ -5,6 +5,8 @@ import msr.mirudl.shared.storage.StorageSettingsAndroid;
 import msr.mirudl.shared.model.AnimeItem;
 import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.network.MiruClientAndroid;
+import msr.mirudl.shared.network.UpdateChecker;
+import msr.mirudl.shared.network.UpdateCheckerAndroid;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -218,7 +220,7 @@ public class MainActivity extends BaseActivity {
         updateCrashBadge();
 
         // Silent update check — shows the update dialog if a newer GitHub release exists
-        UpdateChecker.checkOnStartup(this, info -> {
+        UpdateCheckerAndroid.checkOnStartup(this, info -> {
             refreshUpdateSection(info);
             if (info != null) showUpdateDialog(info);
         });
@@ -1207,7 +1209,7 @@ public class MainActivity extends BaseActivity {
                 updateChevron.setVisibility(View.GONE);
                 TextView statusTv = findViewById(R.id.update_status_text);
                 if (statusTv != null) statusTv.setText("Checking for updates\u2026");
-                UpdateChecker.checkNow(this, info -> {
+                UpdateCheckerAndroid.checkNow(this, info -> {
                     updateProgress.setVisibility(View.GONE);
                     updateChevron.setVisibility(View.VISIBLE);
                     refreshUpdateSection(info);
