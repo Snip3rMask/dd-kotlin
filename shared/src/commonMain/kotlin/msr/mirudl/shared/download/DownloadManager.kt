@@ -1,41 +1,84 @@
 package msr.mirudl.shared.download
 
 import java.util.UUID
+import java.util.Collections
 
 /**
- * Shared port of the `Job` data class + status constants from
- * `msr.mirudl.app.DownloadManager` (Java).
+ * Shared port of `msr.mirudl.app.DownloadManager` (Java).
  *
  * NO `Serializable` — see migration constraint #5.
- * Mutable fields use `@Volatile` for thread safety.
- * The 5-arg constructor + auto-generated fields (id, status, etc.)
- * match the Java original exactly.
+ * Job list is a `Collections.synchronizedList` for thread safety.
+ * All methods are `synchronized` — same locking strategy as the Java original.
  *
- * The `DownloadManager` list + methods stay in `app` for now (Phase 4.2–4.3).
+ * Phase 4.1: Job data class + constants.
+ * Phase 4.2: Query methods (this step).
+ * Phase 4.3a: Mutating methods.
  */
-data class Job @JvmOverloads constructor(
-    @JvmField var animeTitle: String? = null,
-    @JvmField var episodeTitle: String? = null,
-    @JvmField var quality: String? = null,
-    @JvmField var language: String? = null,
-    @JvmField var hlsUrl: String? = null
-) {
-    @JvmField val id: String = UUID.randomUUID().toString()
-    @JvmField var status: String = STATUS_QUEUED
-    @JvmField var percent: Int = 0
-    @JvmField var bytesPerSecond: Long = 0L
-    @JvmField var cancelled: Boolean = false
-    @JvmField var finished: Boolean = false
-    @JvmField var error: String? = null
-    @JvmField var outputUri: String? = null
-    @JvmField var currentIndex: Int = 1
-    @JvmField var totalEpisodes: Int = 1
+object DownloadManager {
 
-    companion object {
-        const val STATUS_QUEUED = "Queued"
-        const val STATUS_DOWNLOADING = "Downloading"
-        const val STATUS_COMPLETED = "Completed"
-        const val STATUS_FAILED = "Failed"
-        const val STATUS_CANCELLED = "Cancelled"
+    private val jobs: MutableList<Job> = Collections.synchronizedList(mutableListOf())
+    @Volatile private var running = false
+
+    @Synchronized
+    fun find(id: String): Job? {
+        for (j in jobs) if (id == j.id) return j
+        return null
+    }
+
+    @Synchronized
+    fun findByAnimeAndEpisode(anime: String?, episode: String?): Job? {
+        for (j in jobs) {
+            if (!j.finished &&
+                j.animeTitle != null && j.animeTitle == anime &&
+                j.episodeTitle != null && j.episodeTitle == episode) {
+                return j
+            }
+        }
+        return null
+    }
+
+    @Synchronized
+    fun hasActiveJob(anime: String?, episode: String?): Boolean {
+        for (j in jobs) {
+            if (!j.finished &&
+                j.animeTitle != null && j.animeTitle == anime &&
+                j.episodeTitle != null && j.episodeTitle == episode) {
+                return true
+            }
+        }
+        return false
+    }
+
+    @Synchronized
+    fun snapshot(): List<Job> {
+        return ArrayList(jobs)
+    }
+
+    @Synchronized
+    fun activeCount(): Int {
+        var count = 0
+        for (j in jobs) if (!j.finished) count++
+        return count
+    }
+
+    @Synchronized
+    fun queuedCount(): Int {
+        var count = 0
+        for (j in jobs)
+            if (!j.finished && Job.STATUS_QUEUED == j.status) count++
+        return count
+    }
+
+    @Synchronized
+    fun downloadingCount(): Int {
+        var count = 0
+        for (j in jobs)
+            if (!j.finished && Job.STATUS_DOWNLOADING == j.status) count++
+        return count
+    }
+
+    @Synchronized
+    fun isRunning(): Boolean {
+        return running
     }
 }
