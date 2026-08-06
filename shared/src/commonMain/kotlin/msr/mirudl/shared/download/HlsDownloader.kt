@@ -236,7 +236,7 @@ object HlsDownloader {
         tempDir: String,
         parallel: Int,
         progress: ProgressListener?,
-        cancel: CancelCheck
+        cancel: CancelCheck?
     ) {
         val total = urls.size
         if (total == 0) return
@@ -271,10 +271,10 @@ object HlsDownloader {
             coroutineScope {
                 val semaphore = Semaphore(clampedParallel)
                 for ((idx, url) in urls.withIndex()) {
-                    if (cancel.isCancelled()) break
+                    if (cancel?.isCancelled() == true) break
                     launch(Dispatchers.Default) {
                         semaphore.withPermit {
-                            if (!cancel.isCancelled()) {
+                            if (cancel?.isCancelled() != true) {
                                 try {
                                     val data = downloadBytes(url)
                                     totalBytes.addAndGet(data.size.toLong())
