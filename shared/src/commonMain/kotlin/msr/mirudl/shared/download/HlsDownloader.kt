@@ -215,7 +215,14 @@ object HlsDownloader {
             }
             if (response.status.value in 200..299) {
                 val channel = response.bodyAsChannel()
-                channel.readRemaining().readBytes()
+                val buf = ByteArray(8192)
+                val out = java.io.ByteArrayOutputStream()
+                while (true) {
+                    val n = channel.readAvailable(buf, 0, buf.size)
+                    if (n == -1) break
+                    out.write(buf, 0, n)
+                }
+                out.toByteArray()
             } else {
                 ByteArray(0)
             }
