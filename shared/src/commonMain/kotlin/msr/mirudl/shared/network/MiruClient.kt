@@ -12,8 +12,9 @@ import msr.mirudl.shared.util.urlEncode
  * Shared port of `msr.mirudl.app.MiruClient` (Java).
  *
  * The HTTP layer (`get()`, `getHtml()`) was moved in 2.2.
- * 2.3 ports the search functionality. Subsequent steps port the
- * remaining methods (browse, episodes, embed, qualities, …).
+ * 2.3 ports the search functionality.
+ * 2.4 ports browseCurrentlyAiring + parseBrowseResults.
+ * Subsequent steps port episodes, embed, qualities, helpers.
  *
  * `BASE` keeps the exact XOR-obfuscation of the original
  * (`https://anidb.app`), and every method mirrors the Java original
@@ -114,6 +115,94 @@ object MiruClient {
 
                 if (item.id != null) results.add(item)
             }
+            idx = aEnd + 4
+        }
+        return results
+    }
+
+    // ==================== BROWSE ====================
+
+    suspend fun browseCurrentlyAiring(): List<AnimeItem> {
+        val url = "$BASE/browse?sort=order_top_airing&status=Currently+Airing"
+        val html = getHtml(url)
+        return parseBrowseResults(html)
+    }
+
+    private fun parseBrowseResults(html: String): List<AnimeItem> {
+        val results = mutableListOf<AnimeItem>()
+        var idx = 0
+        while (true) {
+            val linkStart = html.indexOf("/anime/", idx)
+            if (linkStart < 0) break
+
+            // Find wrapping <a tag
+            val aStart = html.lastIndexOf("<a ", linkStart)
+            if (aStart < 0 || aStart < idx - 50) {
+                idx = linkStart + 7
+                continue
+            }
+
+            val aEnd = html.indexOf("</a>", linkStart)
+            if (aEnd < 0) break
+
+            val block = html.substring(aStart, aEnd + 4)
+            val item = AnimeItem()
+
+            // URL + ID from /anime/slug-id
+            val hrefEnd = html.indexOf("\"", linkStart + 7)
+            if (hrefEnd > linkStart) {
+                item.url = BASE + html.substring(linkStart, hrefEnd)
+                val slugPart = if (item.url!!.startsWith("/anime/")) item.url!!.substring(7) else item.url!!
+                val parts = slugPart.split("-")
+                item.id = if (parts.isNotEmpty()) parts.last() else null
+            }
+
+            // Title from img alt
+            var altIdx = block.indexOf("alt=\"")
+            if (altIdx >= 0) {
+                altIdx += 5
+                val altEnd = block.indexOf("\"", altIdx)
+                if (altEnd > altIdx) {
+                    val alt = block.substring(altIdx, altEnd).trim()
+                    if (alt.isNotEmpty() && !alt.lowercase().contains("thumbnail")
+                        && !alt.lowercase().contains("poster")
+                    ) {
+                        item.title = htmlToText(alt)
+                    }
+                }
+            }
+
+            // Fallback: h2/h3/p text
+            if (item.title == null || item.title!!.isEmpty()) {
+                val regex = Regex("""<(h[23]|p)\b[^>]*>(.*?)</\1>""", RegexOption.DOT_MATCHES_ALL)
+                val match = regex.find(block)
+                if (match != null) {
+                    val t = htmlToText(match.groupValues[2]).trim()
+                    if (t.isNotEmpty() && t.length < 100) item.title = t
+                }
+            }
+            if (item.title == null) item.title = ""
+
+            // Poster image
+            var imgIdx = block.indexOf("src=\"")
+            if (imgIdx >= 0) {
+                imgIdx += 5
+                val imgEnd = block.indexOf("\"", imgIdx)
+                if (imgEnd > imgIdx) {
+                    val src = block.substring(imgIdx, imgEnd)
+                    item.thumbnail = if (!src.startsWith("http")) {
+                        if (src.startsWith("/")) BASE + src else "$BASE/$src"
+                    } else {
+                        src
+                    }
+                }
+            }
+
+            if (item.id != null && item.title!!.isNotEmpty()) {
+                val dup = results.any { it.id != null && it.id == item.id }
+                if (!dup) results.add(item)
+            }
+
             idx = aEnd + 4
         }
         return results
