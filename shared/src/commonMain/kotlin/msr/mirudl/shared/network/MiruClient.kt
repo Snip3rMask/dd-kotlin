@@ -4,7 +4,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.utils.io.errors.IOException
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import msr.mirudl.shared.model.AnimeItem
+import msr.mirudl.shared.model.EpisodeItem
 import msr.mirudl.shared.util.htmlToText
 import msr.mirudl.shared.util.urlEncode
 
@@ -12,9 +15,12 @@ import msr.mirudl.shared.util.urlEncode
  * Shared port of `msr.mirudl.app.MiruClient` (Java).
  *
  * The HTTP layer (`get()`, `getHtml()`) was moved in 2.2.
- * 2.3 ports the search functionality.
- * 2.4 ports browseCurrentlyAiring + parseBrowseResults.
- * Subsequent steps port episodes, embed, qualities, helpers.
+ * 2.3 ports search; 2.4 ports browse; 2.5 ports episodes.
+ * Subsequent steps port embed/HLS, qualities, helpers.
+ *
+ * JSON parsing uses `kotlinx.serialization` instead of `org.json`
+ * (which is Android/JVM-only). `@Serializable` DTOs match the
+ * original `optInt`/`optBoolean` defaults for absent fields.
  *
  * `BASE` keeps the exact XOR-obfuscation of the original
  * (`https://anidb.app`), and every method mirrors the Java original
@@ -30,6 +36,9 @@ object MiruClient {
     private const val UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
     private val client get() = HttpClientProvider.get()
+
+    /** Reusable Json instance — ignores unknown fields for forward compat. */
+    private val json = Json { ignoreUnknownKeys = true }
 
     private fun decodeBase(): String {
         val decoded = ByteArray(encodedBase.size)
@@ -83,7 +92,6 @@ object MiruClient {
             if (block.contains("data-search-item")) {
                 val item = AnimeItem()
 
-                // Extract href
                 val hrefIdx = block.indexOf("href=\"")
                 if (hrefIdx >= 0) {
                     val hrefEnd = block.indexOf("\"", hrefIdx + 6)
@@ -94,7 +102,6 @@ object MiruClient {
                     }
                 }
 
-                // Extract title
                 val titleStart = block.indexOf("line-clamp-1\">")
                 if (titleStart >= 0) {
                     val titleEnd = block.indexOf("</p>", titleStart)
@@ -104,7 +111,6 @@ object MiruClient {
                     }
                 }
 
-                // Extract poster
                 val imgIdx = block.indexOf("src=\"")
                 if (imgIdx >= 0) {
                     val imgEnd = block.indexOf("\"", imgIdx + 5)
@@ -135,7 +141,6 @@ object MiruClient {
             val linkStart = html.indexOf("/anime/", idx)
             if (linkStart < 0) break
 
-            // Find wrapping <a tag
             val aStart = html.lastIndexOf("<a ", linkStart)
             if (aStart < 0 || aStart < idx - 50) {
                 idx = linkStart + 7
@@ -148,7 +153,6 @@ object MiruClient {
             val block = html.substring(aStart, aEnd + 4)
             val item = AnimeItem()
 
-            // URL + ID from /anime/slug-id
             val hrefEnd = html.indexOf("\"", linkStart + 7)
             if (hrefEnd > linkStart) {
                 item.url = BASE + html.substring(linkStart, hrefEnd)
@@ -157,7 +161,6 @@ object MiruClient {
                 item.id = if (parts.isNotEmpty()) parts.last() else null
             }
 
-            // Title from img alt
             var altIdx = block.indexOf("alt=\"")
             if (altIdx >= 0) {
                 altIdx += 5
@@ -172,7 +175,6 @@ object MiruClient {
                 }
             }
 
-            // Fallback: h2/h3/p text
             if (item.title == null || item.title!!.isEmpty()) {
                 val regex = Regex("""<(h[23]|p)\b[^>]*>(.*?)</\1>""", RegexOption.DOT_MATCHES_ALL)
                 val match = regex.find(block)
@@ -183,7 +185,6 @@ object MiruClient {
             }
             if (item.title == null) item.title = ""
 
-            // Poster image
             var imgIdx = block.indexOf("src=\"")
             if (imgIdx >= 0) {
                 imgIdx += 5
@@ -207,4 +208,40 @@ object MiruClient {
         }
         return results
     }
+
+    // ==================== EPISODES ====================
+
+    suspend fun getEpisodes(animeId: String): List<EpisodeItem> {
+        val url = "$BASE/api/frontend/anime/$animeId/episodes"
+        val body = get(url)
+        val response = json.decodeFromString<EpisodesResponse>(body)
+        return response.episodes.map { ep ->
+            EpisodeItem(
+                id = ep.id,
+                number = ep.number,
+                number2 = ep.number2,
+                filler = ep.filler
+            )
+        }
+    }
+
+    /**
+     * Currently identical to [getEpisodes] — kept as a separate entry
+     * point for API parity with the Java original.
+     */
+    suspend fun getEpisodesWithSeasons(animeId: String): List<EpisodeItem> =
+        getEpisodes(animeId)
+
+    // -- kotlinx.serialization DTOs (private) --
+
+    @Serializable
+    private data class EpisodesResponse(val episodes: List<EpisodeDto> = emptyList())
+
+    @Serializable
+    private data class EpisodeDto(
+        val id: Int = 0,
+        val number: Int = 0,
+        val number2: Int = 0,
+        val filler: Boolean = false
+    )
 }
