@@ -13,7 +13,7 @@ public class MiruDLApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        AndroidFileStorage.init(this);
+        AndroidFileStorage.INSTANCE.init(this);
         CrashLogger.init(this);
         createNotificationChannels();
     }
