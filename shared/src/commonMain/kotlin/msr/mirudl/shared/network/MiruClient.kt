@@ -8,19 +8,16 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import msr.mirudl.shared.model.AnimeItem
 import msr.mirudl.shared.model.EpisodeItem
+import msr.mirudl.shared.model.VideoSource
 import msr.mirudl.shared.util.htmlToText
 import msr.mirudl.shared.util.urlEncode
 
 /**
  * Shared port of `msr.mirudl.app.MiruClient` (Java).
  *
- * The HTTP layer (`get()`, `getHtml()`) was moved in 2.2.
- * 2.3 ports search; 2.4 ports browse; 2.5 ports episodes.
- * Subsequent steps port embed/HLS, qualities, helpers.
- *
  * JSON parsing uses `kotlinx.serialization` instead of `org.json`
- * (which is Android/JVM-only). `@Serializable` DTOs match the
- * original `optInt`/`optBoolean` defaults for absent fields.
+ * (Android/JVM-only). `@Serializable` DTOs match the original
+ * `optString`/`optInt`/`optBoolean` defaults for absent fields.
  *
  * `BASE` keeps the exact XOR-obfuscation of the original
  * (`https://anidb.app`), and every method mirrors the Java original
@@ -225,14 +222,41 @@ object MiruClient {
         }
     }
 
-    /**
-     * Currently identical to [getEpisodes] — kept as a separate entry
-     * point for API parity with the Java original.
-     */
     suspend fun getEpisodesWithSeasons(animeId: String): List<EpisodeItem> =
         getEpisodes(animeId)
 
-    // -- kotlinx.serialization DTOs (private) --
+    // ==================== EMBED / HLS ====================
+
+    suspend fun getEpisodeLanguages(episodeId: Int): List<VideoSource> {
+        val url = "$BASE/api/frontend/episode/$episodeId/languages"
+        val body = get(url)
+        val response = json.decodeFromString<LanguagesResponse>(body)
+        return response.languages.map { lang ->
+            VideoSource(
+                quality = lang.name,
+                url = lang.embed_url,
+                language = lang.code,
+                server = "MiruDL"
+            )
+        }
+    }
+
+    suspend fun resolveHlsFromEmbed(embedUrl: String): String? {
+        val html = getHtml(embedUrl)
+        // Match file: '...master.m3u8' or file: "...master.m3u8"
+        val fileIdx = html.indexOf("file:")
+        if (fileIdx < 0) return null
+        var quoteStart = html.indexOf("'", fileIdx)
+        if (quoteStart < 0) quoteStart = html.indexOf("\"", fileIdx)
+        if (quoteStart < 0) quoteStart = html.indexOf("`", fileIdx)
+        if (quoteStart < 0) return null
+        val quote = html[quoteStart]
+        val quoteEnd = html.indexOf(quote, quoteStart + 1)
+        if (quoteEnd < 0) return null
+        return html.substring(quoteStart + 1, quoteEnd)
+    }
+
+    // ==================== PRIVATE DTOs ====================
 
     @Serializable
     private data class EpisodesResponse(val episodes: List<EpisodeDto> = emptyList())
@@ -243,5 +267,15 @@ object MiruClient {
         val number: Int = 0,
         val number2: Int = 0,
         val filler: Boolean = false
+    )
+
+    @Serializable
+    private data class LanguagesResponse(val languages: List<LanguageDto> = emptyList())
+
+    @Serializable
+    private data class LanguageDto(
+        val name: String = "Source",
+        val embed_url: String = "",
+        val code: String = "jpn"
     )
 }
