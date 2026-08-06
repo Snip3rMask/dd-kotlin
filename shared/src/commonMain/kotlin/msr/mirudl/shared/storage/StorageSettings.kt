@@ -16,4 +16,24 @@ object StorageSettings {
     fun setDownloadUri(storage: AppStorage, uri: String) {
         storage.setString(KEY_DOWNLOAD_URI, uri)
     }
+
+    private const val KEY_PARALLEL = "parallel_segments"
+    private const val KEY_CONCURRENT_DOWNLOADS = "concurrent_downloads"
+    const val DEFAULT_PARALLEL = 16
+
+    fun getParallelSegments(storage: AppStorage): Int {
+        return storage.getInt(KEY_PARALLEL, DEFAULT_PARALLEL)
+    }
+
+    fun setParallelSegments(storage: AppStorage, value: Int) {
+        storage.setInt(KEY_PARALLEL, value)
+    }
+
+    fun getConcurrentDownloads(storage: AppStorage): Int {
+        return storage.getInt(KEY_CONCURRENT_DOWNLOADS, 1)
+    }
+
+    fun setConcurrentDownloads(storage: AppStorage, value: Int) {
+        storage.setInt(KEY_CONCURRENT_DOWNLOADS, value)
+    }
 }
