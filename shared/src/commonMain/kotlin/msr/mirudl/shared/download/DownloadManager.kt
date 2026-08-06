@@ -15,6 +15,8 @@ object DownloadManager {
     private val jobs: MutableList<Job> = Collections.synchronizedList(mutableListOf())
     private var running = false
 
+    // ── Query methods (read-only) ──────────────────────────────────
+
     @Synchronized
     fun find(id: String): Job? {
         for (j in jobs) if (id == j.id) return j
@@ -76,6 +78,112 @@ object DownloadManager {
     @Synchronized
     fun isRunning(): Boolean {
         return running
+    }
+
+    // ── Mutating methods ───────────────────────────────────────────
+
+    @Synchronized
+    fun enqueue(anime: String?, episode: String?, quality: String?,
+                language: String?, hlsUrl: String?): Job {
+        for (existing in jobs) {
+            if (!existing.finished &&
+                existing.animeTitle != null && existing.animeTitle == anime &&
+                existing.episodeTitle != null && existing.episodeTitle == episode &&
+                existing.quality != null && existing.quality == quality) {
+                return existing
+            }
+        }
+        val job = Job(anime, episode, quality, language, hlsUrl)
+        jobs.add(job)
+        return job
+    }
+
+    @Synchronized
+    fun enqueueAll(newJobs: List<Job>) {
+        val seen = linkedSetOf<String>()
+        val deduped = mutableListOf<Job>()
+        val all = ArrayList(newJobs) + jobs
+        for (i in all.indices.reversed()) {
+            val j = all[i]
+            val key = (j.animeTitle ?: "") + "|||" + (j.episodeTitle ?: "") + "|||" + (j.quality ?: "")
+            if (key !in seen || j.finished) {
+                seen.add(key)
+                deduped.add(0, j)
+            }
+        }
+        jobs.clear()
+        jobs.addAll(deduped)
+    }
+
+    @Synchronized
+    fun update(job: Job?, percent: Int, status: String) {
+        if (job == null) return
+        job.percent = percent
+        job.status = status
+    }
+
+    @Synchronized
+    fun updateMulti(job: Job?, currentIndex: Int, episode: String, percent: Int, status: String) {
+        if (job == null) return
+        job.currentIndex = currentIndex
+        job.episodeTitle = episode
+        job.percent = percent
+        job.status = status
+    }
+
+    @Synchronized
+    fun complete(job: Job?, outputUri: String) {
+        if (job == null) return
+        job.percent = 100
+        job.status = Job.STATUS_COMPLETED
+        job.finished = true
+        job.bytesPerSecond = 0
+        job.outputUri = outputUri
+    }
+
+    @Synchronized
+    fun fail(job: Job?, error: String?) {
+        if (job == null) return
+        job.error = error
+        job.status = error ?: Job.STATUS_FAILED
+        job.finished = true
+        job.bytesPerSecond = 0
+    }
+
+    @Synchronized
+    fun cancel(job: Job?) {
+        if (job == null) return
+        job.cancelled = true
+        job.status = Job.STATUS_CANCELLED
+        job.finished = true
+        job.bytesPerSecond = 0
+    }
+
+    @Synchronized
+    fun remove(job: Job?) {
+        jobs.remove(job)
+    }
+
+    @Synchronized
+    fun removeFinished() {
+        jobs.removeAll { it.finished }
+    }
+
+    @Synchronized
+    fun claimNextQueuedJob(): Job? {
+        for (j in jobs) {
+            if (!j.finished && Job.STATUS_QUEUED == j.status) {
+                j.status = Job.STATUS_DOWNLOADING
+                j.percent = 0
+                return j
+            }
+        }
+        return null
+    }
+
+    @Synchronized
+    fun setRunning(value: Boolean) {
+        running = value
     }
 }
 
