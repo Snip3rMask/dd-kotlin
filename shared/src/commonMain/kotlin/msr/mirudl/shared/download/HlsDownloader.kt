@@ -1,6 +1,6 @@
 package msr.mirudl.shared.download
 
-import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.http.*
 import java.io.IOException
@@ -214,15 +214,7 @@ object HlsDownloader {
                 }
             }
             if (response.status.value in 200..299) {
-                val channel = response.bodyAsChannel()
-                val buf = ByteArray(8192)
-                val out = java.io.ByteArrayOutputStream()
-                while (true) {
-                    val n = channel.readAvailable(buf, 0, buf.size)
-                    if (n == -1) break
-                    out.write(buf, 0, n)
-                }
-                out.toByteArray()
+                response.body<ByteArray>()
             } else {
                 ByteArray(0)
             }
