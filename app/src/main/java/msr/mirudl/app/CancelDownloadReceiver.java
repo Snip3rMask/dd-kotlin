@@ -1,5 +1,8 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.download.DownloadManagerAndroid;
+import msr.mirudl.shared.download.Job;
+
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,17 +19,17 @@ public class CancelDownloadReceiver extends BroadcastReceiver {
 
         if ("all".equals(jobId)) {
             // Cancel ALL active jobs
-            for (DownloadManager.Job j : DownloadManager.snapshot()) {
+            for (Job j : DownloadManagerAndroid.snapshot()) {
                 if (!j.finished) {
-                    DownloadManager.cancel(j);
+                    DownloadManagerAndroid.cancel(j);
                     hadActive = true;
                 }
             }
         } else {
             // Cancel a specific job by ID
-            DownloadManager.Job job = DownloadManager.find(jobId);
+            Job job = DownloadManagerAndroid.find(jobId);
             if (job != null && !job.finished) {
-                DownloadManager.cancel(job);
+                DownloadManagerAndroid.cancel(job);
                 hadActive = true;
             }
         }
@@ -51,7 +54,7 @@ public class CancelDownloadReceiver extends BroadcastReceiver {
         }
 
         // Stop the download service if no more active jobs
-        if (DownloadManager.activeCount() == 0) {
+        if (DownloadManagerAndroid.activeCount() == 0) {
             Intent stopIntent = new Intent(context, DownloadService.class);
             context.stopService(stopIntent);
         }

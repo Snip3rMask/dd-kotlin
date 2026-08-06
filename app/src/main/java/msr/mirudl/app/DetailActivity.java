@@ -7,6 +7,8 @@ import msr.mirudl.shared.storage.DownloadEntryStoreAndroid;
 import msr.mirudl.shared.model.EpisodeItem;
 import msr.mirudl.shared.model.VideoSource;
 import msr.mirudl.shared.network.MiruClientAndroid;
+import msr.mirudl.shared.download.DownloadManagerAndroid;
+import msr.mirudl.shared.download.Job;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -457,14 +459,12 @@ public class DetailActivity extends BaseActivity {
         // (service isn't actually running/processing it), resume it instead of
         // silently doing nothing forever.
         String label = "Episode " + ep.getLabel();
-        for (DownloadManager.Job existing : DownloadManager.snapshot()) {
+        for (Job existing : DownloadManagerAndroid.snapshot()) {
             if (!existing.finished && existing.animeTitle.equals(animeTitle) && existing.episodeTitle.equals(label)) {
-                if (!DownloadManager.isRunning()) {
+                if (!DownloadManagerAndroid.isRunning()) {
                     // Orphaned/stuck job: the service died or was never (re)started
                     // for it. Kick it off again instead of blocking the retry.
-                    List<DownloadManager.Job> jobs = new ArrayList<>();
-                    jobs.add(existing);
-                    Intent intent = DownloadService.startIntent(this, jobs);
+                    Intent intent = DownloadService.startIntent(this);
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         startForegroundService(intent);
                     } else {
@@ -478,14 +478,12 @@ public class DetailActivity extends BaseActivity {
             }
         }
 
-        DownloadManager.Job job = DownloadManager.enqueue(
+        Job job = DownloadManagerAndroid.enqueue(
                 animeTitle, label, quality, language, hlsUrl
         );
         adapter.notifyDataSetChanged();
 
-        List<DownloadManager.Job> jobs = new ArrayList<>();
-        jobs.add(job);
-        Intent intent = DownloadService.startIntent(this, jobs);
+        Intent intent = DownloadService.startIntent(this);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             startForegroundService(intent);
         } else {
@@ -507,7 +505,7 @@ public class DetailActivity extends BaseActivity {
     private void enqueueEpisodes(List<EpisodeItem> list, String successMessage) {
         executor.execute(() -> {
             try {
-                List<DownloadManager.Job> jobs = new ArrayList<>();
+                List<Job> jobs = new ArrayList<>();
                 String prefLang = StorageSettingsAndroid.getPreferredLanguage(this);
 
                 for (EpisodeItem ep : list) {
@@ -535,7 +533,7 @@ public class DetailActivity extends BaseActivity {
                             ep.langName = langName;
                         }
 
-                        DownloadManager.Job job = DownloadManager.enqueue(
+                        Job job = DownloadManagerAndroid.enqueue(
                                 animeTitle, "Episode " + ep.getLabel(),
                                 StorageSettingsAndroid.getPreferredQuality(this),
                                 language != null ? language : "jpn", hlsUrl
@@ -545,7 +543,7 @@ public class DetailActivity extends BaseActivity {
                 }
 
                 if (!jobs.isEmpty()) {
-                    Intent intent = DownloadService.startIntent(this, jobs);
+                    Intent intent = DownloadService.startIntent(this);
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         startForegroundService(intent);
                     } else {

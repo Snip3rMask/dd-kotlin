@@ -1,6 +1,7 @@
 package msr.mirudl.app;
 
 import msr.mirudl.shared.model.DownloadRecord;
+import msr.mirudl.shared.download.Job;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -37,7 +38,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private OnActionListener listener;
 
     public interface OnActionListener {
-        void onCancel(DownloadManager.Job job);
+        void onCancel(Job job);
         void onClick(DownloadRecord entry);
         void onDelete(DownloadRecord entry);
         void onSelectionToggle(DownloadRecord entry);
@@ -51,16 +52,16 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.listener = listener;
     }
 
-    public void setData(List<DownloadManager.Job> jobs, List<DownloadRecord> entries) {
+    public void setData(List<Job> jobs, List<DownloadRecord> entries) {
         items.clear();
 
         // ── ACTIVE SECTION ──
         boolean hasActive = false;
-        for (DownloadManager.Job j : jobs) if (!j.finished) { hasActive = true; break; }
+        for (Job j : jobs) if (!j.finished) { hasActive = true; break; }
 
         if (hasActive) {
             items.add("DOWNLOADING");
-            for (DownloadManager.Job job : jobs) {
+            for (Job job : jobs) {
                 if (!job.finished) items.add(job);
             }
         }
@@ -111,7 +112,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         Object item = items.get(position);
         if (item instanceof String) return TYPE_SECTION;
         if (item instanceof FolderHeader) return TYPE_FOLDER;
-        if (item instanceof DownloadManager.Job) return TYPE_ACTIVE;
+        if (item instanceof Job) return TYPE_ACTIVE;
         if (item instanceof DownloadRecord) return TYPE_COMPLETED;
         return TYPE_SECTION;
     }
@@ -140,7 +141,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         } else if (h instanceof FolderHolder) {
             bindFolder((FolderHolder) h, (FolderHeader) item);
         } else if (h instanceof ActiveHolder) {
-            bindActive((ActiveHolder) h, (DownloadManager.Job) item);
+            bindActive((ActiveHolder) h, (Job) item);
         } else if (h instanceof CompletedHolder) {
             bindCompleted((CompletedHolder) h, (DownloadRecord) item);
         }
@@ -411,7 +412,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         });
     }
 
-    private void bindActive(ActiveHolder h, DownloadManager.Job job) {
+    private void bindActive(ActiveHolder h, Job job) {
         h.animeTv.setText(job.animeTitle != null ? job.animeTitle : "");
         h.epTv.setText(job.episodeTitle != null ? job.episodeTitle : "");
 

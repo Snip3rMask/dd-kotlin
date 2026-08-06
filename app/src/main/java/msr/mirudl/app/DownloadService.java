@@ -1,6 +1,8 @@
 package msr.mirudl.app;
 
 import msr.mirudl.shared.storage.StorageSettingsAndroid;
+import msr.mirudl.shared.download.DownloadManagerAndroid;
+import msr.mirudl.shared.download.Job;
 
 import android.app.PendingIntent;
 import android.app.Service;
@@ -12,8 +14,6 @@ import android.app.NotificationManager;
 
 import androidx.core.app.NotificationCompat;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,7 +23,6 @@ public class DownloadService extends Service {
     private static final String ACTION_START = "start";
     private static final String ACTION_CANCEL = "cancel";
     private static final String EXTRA_JOB_ID = "jobId";
-    private static final String EXTRA_JOBS = "jobs";
     private static final int NOTIF_ID = 1001;
     private static final int MAX_LANES = 10; // hard safety ceiling regardless of user setting
 
@@ -36,10 +35,9 @@ public class DownloadService extends Service {
 
     private final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
-    public static Intent startIntent(Context context, List<DownloadManager.Job> jobs) {
+    public static Intent startIntent(Context context) {
         Intent intent = new Intent(context, DownloadService.class);
         intent.setAction(ACTION_START);
-        intent.putExtra(EXTRA_JOBS, new ArrayList<>(jobs));
         return intent;
     }
 
@@ -62,7 +60,7 @@ public class DownloadService extends Service {
 
         if (!ACTION_START.equals(action)) return START_NOT_STICKY;
 
-        int activeJobs = DownloadManager.activeCount();
+        int activeJobs = DownloadManagerAndroid.activeCount();
         if (activeJobs == 0) return START_NOT_STICKY;
 
         boolean freshBatch = activeWorkers.get() == 0;
@@ -70,7 +68,7 @@ public class DownloadService extends Service {
             completedCount.set(0);
             failedCount.set(0);
             cancelledCount.set(0);
-            DownloadManager.setRunning(true);
+            DownloadManagerAndroid.setRunning(true);
             startForeground(NOTIF_ID, buildNotif(null, activeJobs + " downloads queued", 0, false));
         }
 
@@ -84,7 +82,7 @@ public class DownloadService extends Service {
         int limit = Math.max(1, Math.min(MAX_LANES, StorageSettingsAndroid.getConcurrentDownloads(this)));
         synchronized (lanesLock) {
             while (activeWorkers.get() < limit) {
-                DownloadManager.Job job = DownloadManager.claimNextQueuedJob();
+                Job job = DownloadManagerAndroid.claimNextQueuedJob();
                 if (job == null) break; // nothing left to claim right now
                 activeWorkers.incrementAndGet();
                 worker.execute(() -> workerLoop(job));
@@ -92,16 +90,16 @@ public class DownloadService extends Service {
         }
     }
 
-    private void workerLoop(DownloadManager.Job firstJob) {
-        DownloadManager.Job job = firstJob;
+    private void workerLoop(Job firstJob) {
+        Job job = firstJob;
         try {
             while (job != null) {
                 runSingleJob(job);
-                job = DownloadManager.claimNextQueuedJob();
+                job = DownloadManagerAndroid.claimNextQueuedJob();
             }
         } finally {
             int remaining = activeWorkers.decrementAndGet();
-            if (DownloadManager.activeCount() == 0) {
+            if (DownloadManagerAndroid.activeCount() == 0) {
                 finishBatchIfIdle();
             } else if (remaining == 0) {
                 // Jobs may have been queued while this was the last lane finishing up — relaunch.
@@ -111,7 +109,7 @@ public class DownloadService extends Service {
     }
 
     /** Downloads a single claimed job, updating shared counters and the notification. */
-    private void runSingleJob(DownloadManager.Job job) {
+    private void runSingleJob(Job job) {
         try {
             pushNotif(buildNotif(job, activeSummaryPrefix() + job.episodeTitle + " - Starting...", 0, false));
 
@@ -120,7 +118,7 @@ public class DownloadService extends Service {
                 playUrl = MiruClientAndroid.resolveHlsFromEmbed(playUrl);
             }
 
-            final DownloadManager.Job currentJob = job;
+            final Job currentJob = job;
             final long[] lastNotifTime = {0};
 
             String output = HlsDownloader.download(
@@ -131,7 +129,7 @@ public class DownloadService extends Service {
                         @Override
                         public void onProgress(int percent, int done, int total) {
                             try {
-                                DownloadManager.update(currentJob, percent, DownloadManager.STATUS_DOWNLOADING);
+                                DownloadManagerAndroid.update(currentJob, percent, Job.STATUS_DOWNLOADING);
                                 currentJob.percent = percent;
                                 long now = System.currentTimeMillis();
                                 if (now - lastNotifTime[0] >= 500) {
@@ -154,7 +152,7 @@ public class DownloadService extends Service {
                 cancelledCount.incrementAndGet();
                 pushNotif(buildNotif(job, "\u2716 " + job.episodeTitle + " Cancelled", 0, true));
             } else {
-                DownloadManager.complete(job, output);
+                DownloadManagerAndroid.complete(job, output);
                 completedCount.incrementAndGet();
                 pushNotif(buildNotif(job, "\u2713 " + job.episodeTitle + " Done", 100, true));
             }
@@ -162,10 +160,10 @@ public class DownloadService extends Service {
             try {
                 String msg = e.getMessage() != null ? e.getMessage() : "Failed";
                 if (msg.contains("cancelled by user") || msg.contains("Cancelled") || job.cancelled) {
-                    DownloadManager.cancel(job);
+                    DownloadManagerAndroid.cancel(job);
                     cancelledCount.incrementAndGet();
                 } else {
-                    DownloadManager.fail(job, msg);
+                    DownloadManagerAndroid.fail(job, msg);
                     failedCount.incrementAndGet();
                 }
                 pushNotif(buildNotif(job, "\u2716 " + job.episodeTitle + " " + msg, 0, true));
@@ -176,9 +174,9 @@ public class DownloadService extends Service {
     /** Called whenever a lane finishes; only actually wraps up the batch once nothing is left running. */
     private void finishBatchIfIdle() {
         synchronized (lanesLock) {
-            if (activeWorkers.get() != 0 || DownloadManager.activeCount() != 0) return;
+            if (activeWorkers.get() != 0 || DownloadManagerAndroid.activeCount() != 0) return;
 
-            DownloadManager.setRunning(false);
+            DownloadManagerAndroid.setRunning(false);
 
             int completed = completedCount.get();
             int failed = failedCount.get();
@@ -207,29 +205,29 @@ public class DownloadService extends Service {
 
     /** Shows how many downloads are running at once, e.g. "(3 active) " — omitted when only one. */
     private String activeSummaryPrefix() {
-        int active = DownloadManager.downloadingCount();
+        int active = DownloadManagerAndroid.downloadingCount();
         return active > 1 ? "(" + active + " active) " : "";
     }
 
     private void handleCancel(Intent intent) {
         String jobId = intent.getStringExtra(EXTRA_JOB_ID);
         if ("all".equals(jobId)) {
-            for (DownloadManager.Job j : DownloadManager.snapshot()) {
+            for (Job j : DownloadManagerAndroid.snapshot()) {
                 if (!j.finished) {
-                    DownloadManager.cancel(j);
+                    DownloadManagerAndroid.cancel(j);
                 }
             }
             pushNotif(buildNotif(null, "Downloads cancelled", 0, true));
-            if (DownloadManager.activeCount() == 0) {
+            if (DownloadManagerAndroid.activeCount() == 0) {
                 try { stopForeground(true); } catch (Exception ignored) {}
                 try { stopSelf(); } catch (Exception ignored) {}
             }
         } else {
-            DownloadManager.Job job = DownloadManager.find(jobId);
+            Job job = DownloadManagerAndroid.find(jobId);
             if (job != null) {
-                DownloadManager.cancel(job);
+                DownloadManagerAndroid.cancel(job);
                 pushNotif(buildNotif(job, "Cancelled", 0, true));
-                if (DownloadManager.activeCount() == 0) {
+                if (DownloadManagerAndroid.activeCount() == 0) {
                     try { stopForeground(true); } catch (Exception ignored) {}
                     try { stopSelf(); } catch (Exception ignored) {}
                 }
@@ -243,7 +241,7 @@ public class DownloadService extends Service {
     @Override
     public void onDestroy() {
         worker.shutdownNow();
-        DownloadManager.setRunning(false);
+        DownloadManagerAndroid.setRunning(false);
         super.onDestroy();
     }
 
@@ -254,7 +252,7 @@ public class DownloadService extends Service {
     }
 
     /** Build a notification from a Job (title + text + progress) */
-    private android.app.Notification buildNotif(DownloadManager.Job job, String text, int progress, boolean done) {
+    private android.app.Notification buildNotif(Job job, String text, int progress, boolean done) {
         String title = "MiruDL";
         String subText = "";
         if (job != null && job.animeTitle != null) {
@@ -293,7 +291,7 @@ public class DownloadService extends Service {
     }
 
     /** Overload for backward compat – builds a notification directly from job state */
-    private android.app.Notification buildNotif(DownloadManager.Job job) {
+    private android.app.Notification buildNotif(Job job) {
         if (job == null) {
             return buildNotif(null, "Starting...", 0, false);
         }

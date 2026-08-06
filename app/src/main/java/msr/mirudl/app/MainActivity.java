@@ -8,6 +8,8 @@ import msr.mirudl.shared.storage.DownloadEntryStoreAndroid;
 import msr.mirudl.shared.network.MiruClientAndroid;
 import msr.mirudl.shared.network.UpdateChecker;
 import msr.mirudl.shared.network.UpdateCheckerAndroid;
+import msr.mirudl.shared.download.DownloadManagerAndroid;
+import msr.mirudl.shared.download.Job;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -417,9 +419,9 @@ public class MainActivity extends BaseActivity {
         btnClearFinished.setOnClickListener(v -> clearFinished());
 
         downloadAdapter = new DownloadAdapter(this, new DownloadAdapter.OnActionListener() {
-            @Override public void onCancel(DownloadManager.Job job) {
+            @Override public void onCancel(Job job) {
                 if (job != null) {
-                    DownloadManager.cancel(job);
+                    DownloadManagerAndroid.cancel(job);
                     // Also notify the service
                     Intent cancelIntent = new Intent(MainActivity.this, DownloadService.class);
                     cancelIntent.setAction("cancel");
@@ -482,11 +484,11 @@ public class MainActivity extends BaseActivity {
     }
 
     private void refreshDownloads() {
-        List<DownloadManager.Job> active = DownloadManager.snapshot();
+        List<Job> active = DownloadManagerAndroid.snapshot();
         List<DownloadRecord> completed = DownloadEntryStoreAndroid.all(this);
 
         boolean hasActive = false;
-        for (DownloadManager.Job j : active) {
+        for (Job j : active) {
             if (!j.finished) { hasActive = true; break; }
         }
 
@@ -497,7 +499,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void clearFinished() {
-        DownloadManager.removeFinished();
+        DownloadManagerAndroid.removeFinished();
         List<DownloadRecord> entries = DownloadEntryStoreAndroid.all(this);
         if (!entries.isEmpty()) {
             new android.app.AlertDialog.Builder(this)
