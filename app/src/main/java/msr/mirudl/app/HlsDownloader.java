@@ -3,6 +3,7 @@ package msr.mirudl.app;
 import msr.mirudl.shared.storage.StorageSettingsAndroid;
 
 import msr.mirudl.shared.model.DownloadRecord;
+import msr.mirudl.shared.storage.DownloadEntryStoreAndroid;
 import msr.mirudl.shared.model.VideoSource;
 import msr.mirudl.shared.network.MiruClientAndroid;
 
@@ -351,7 +352,7 @@ public final class HlsDownloader {
             entry.parent = parent;
             entry.size = size;
             entry.completedAt = System.currentTimeMillis();
-            DownloadEntryStore.add(context, entry);
+            DownloadEntryStoreAndroid.add(context, entry);
         } catch (Exception ignored) {}
     }
 

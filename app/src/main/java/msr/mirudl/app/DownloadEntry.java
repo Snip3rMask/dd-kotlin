@@ -1,6 +1,7 @@
 package msr.mirudl.app;
 
 import msr.mirudl.shared.model.DownloadRecord;
+import msr.mirudl.shared.storage.DownloadEntryStoreAndroid;
 
 import android.content.Context;
 import android.net.Uri;
@@ -37,7 +38,7 @@ public final class DownloadEntry {
     }
 
     public void deleteRecordOnly(Context context) {
-        DownloadEntryStore.remove(context, record);
+        DownloadEntryStoreAndroid.remove(context, record);
     }
 
     public boolean deleteFileAndRecord(Context context) {
@@ -48,7 +49,7 @@ public final class DownloadEntry {
                 fileDeleted = doc != null && doc.delete();
             } catch (Exception ignored) {}
         }
-        DownloadEntryStore.remove(context, record);
+        DownloadEntryStoreAndroid.remove(context, record);
         return fileDeleted;
     }
 }

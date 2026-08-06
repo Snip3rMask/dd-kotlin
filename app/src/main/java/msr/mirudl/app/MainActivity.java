@@ -4,6 +4,7 @@ import msr.mirudl.shared.storage.StorageSettingsAndroid;
 
 import msr.mirudl.shared.model.AnimeItem;
 import msr.mirudl.shared.model.DownloadRecord;
+import msr.mirudl.shared.storage.DownloadEntryStoreAndroid;
 import msr.mirudl.shared.network.MiruClientAndroid;
 import msr.mirudl.shared.network.UpdateChecker;
 import msr.mirudl.shared.network.UpdateCheckerAndroid;
@@ -460,7 +461,7 @@ public class MainActivity extends BaseActivity {
             }
             @Override public void onGroupDeleteRequest(String groupName) {
                 List<DownloadEntry> groupEntries = new ArrayList<>();
-                List<DownloadRecord> all = DownloadEntryStore.all(MainActivity.this);
+                List<DownloadRecord> all = DownloadEntryStoreAndroid.all(MainActivity.this);
                 for (DownloadRecord e : all) {
                     if (groupName.equals(e.parentName())) {
                         groupEntries.add(DownloadEntry.fromRecord(e));
@@ -482,7 +483,7 @@ public class MainActivity extends BaseActivity {
 
     private void refreshDownloads() {
         List<DownloadManager.Job> active = DownloadManager.snapshot();
-        List<DownloadRecord> completed = DownloadEntryStore.all(this);
+        List<DownloadRecord> completed = DownloadEntryStoreAndroid.all(this);
 
         boolean hasActive = false;
         for (DownloadManager.Job j : active) {
@@ -497,13 +498,13 @@ public class MainActivity extends BaseActivity {
 
     private void clearFinished() {
         DownloadManager.removeFinished();
-        List<DownloadRecord> entries = DownloadEntryStore.all(this);
+        List<DownloadRecord> entries = DownloadEntryStoreAndroid.all(this);
         if (!entries.isEmpty()) {
             new android.app.AlertDialog.Builder(this)
                     .setTitle("Clear History")
                     .setMessage("Remove all download history?")
                     .setPositiveButton("Clear", (d, w) -> {
-                        DownloadEntryStore.removeAll(this, entries);
+                        DownloadEntryStoreAndroid.removeAll(this, entries);
                         refreshDownloads();
                     })
                     .setNegativeButton("Cancel", null)

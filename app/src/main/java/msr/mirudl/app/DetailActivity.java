@@ -3,6 +3,7 @@ package msr.mirudl.app;
 import msr.mirudl.shared.storage.StorageSettingsAndroid;
 
 import msr.mirudl.shared.model.DownloadRecord;
+import msr.mirudl.shared.storage.DownloadEntryStoreAndroid;
 import msr.mirudl.shared.model.EpisodeItem;
 import msr.mirudl.shared.model.VideoSource;
 import msr.mirudl.shared.network.MiruClientAndroid;
@@ -580,7 +581,7 @@ public class DetailActivity extends BaseActivity {
     /** Rebuilds the set of already-downloaded episode labels for this anime. */
     private java.util.Set<String> currentDownloadedSet() {
         java.util.Set<String> downloaded = new java.util.HashSet<>();
-        for (DownloadRecord e : DownloadEntryStore.all(this)) {
+        for (DownloadRecord e : DownloadEntryStoreAndroid.all(this)) {
             if (animeTitle != null && animeTitle.equals(e.parentName())) {
                 String epLabel = e.title.replace("Episode ", "").trim();
                 if (!epLabel.isEmpty()) downloaded.add(epLabel);
