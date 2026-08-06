@@ -20,6 +20,7 @@ object AndroidFileStorage : FileStorage {
 
     private lateinit var appContext: Context
 
+    @JvmStatic
     fun init(context: Context) {
         appContext = context.applicationContext
     }
