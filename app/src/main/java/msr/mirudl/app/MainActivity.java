@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.storage.StorageSettingsAndroid;
+
 import msr.mirudl.shared.model.AnimeItem;
 import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.network.MiruClientAndroid;
@@ -122,7 +124,7 @@ public class MainActivity extends BaseActivity {
                                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                             );
                         } catch (Exception ignored) {}
-                        StorageSettings.setDownloadUri(this, treeUri);
+                        StorageSettingsAndroid.setDownloadUri(this, treeUri);
                         updateFolderDisplay();
                         Toast.makeText(this, "Download folder set", Toast.LENGTH_SHORT).show();
                     }
@@ -1041,7 +1043,7 @@ public class MainActivity extends BaseActivity {
                     parallelBar.setProgress(safe);
                     parallelValue.setText(String.valueOf(safe));
                     updateParallelTint(safe);
-                    StorageSettings.setParallelSegments(MainActivity.this, safe);
+                    StorageSettingsAndroid.setParallelSegments(MainActivity.this, safe);
                 })
                 .show();
     }
@@ -1054,7 +1056,7 @@ public class MainActivity extends BaseActivity {
         parallelBar = findViewById(R.id.parallel_seekbar);
         parallelValue = findViewById(R.id.parallel_value);
 
-        int currentParallel = StorageSettings.getParallelSegments(this);
+        int currentParallel = StorageSettingsAndroid.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
         parallelValue.setText(String.valueOf(currentParallel));
         updateParallelTint(currentParallel);
@@ -1072,7 +1074,7 @@ public class MainActivity extends BaseActivity {
                     int val = Math.max(1, progress);
                     parallelValue.setText(String.valueOf(val));
                     updateParallelTint(val);
-                    StorageSettings.setParallelSegments(MainActivity.this, val);
+                    StorageSettingsAndroid.setParallelSegments(MainActivity.this, val);
                 }
             }
         });
@@ -1081,7 +1083,7 @@ public class MainActivity extends BaseActivity {
         concurrentBar = findViewById(R.id.concurrent_seekbar);
         concurrentValue = findViewById(R.id.concurrent_value);
 
-        int currentConcurrent = StorageSettings.getConcurrentDownloads(this);
+        int currentConcurrent = StorageSettingsAndroid.getConcurrentDownloads(this);
         concurrentBar.setProgress(Math.max(0, currentConcurrent - 1)); // seekbar is 0-based, value is 1-based
         concurrentValue.setText(String.valueOf(currentConcurrent));
 
@@ -1093,7 +1095,7 @@ public class MainActivity extends BaseActivity {
                 if (fromUser) {
                     int val = progress + 1;
                     concurrentValue.setText(String.valueOf(val));
-                    StorageSettings.setConcurrentDownloads(MainActivity.this, val);
+                    StorageSettingsAndroid.setConcurrentDownloads(MainActivity.this, val);
                 }
             }
         });
@@ -1104,13 +1106,13 @@ public class MainActivity extends BaseActivity {
                 R.layout.spinner_value_chevron, android.R.id.text1, qualities);
         qAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         qualitySpinner.setAdapter(qAdapter);
-        String prefQ = StorageSettings.getPreferredQuality(this);
+        String prefQ = StorageSettingsAndroid.getPreferredQuality(this);
         for (int i = 0; i < qualities.length; i++) {
             if (qualities[i].equals(prefQ)) { qualitySpinner.setSelection(i); break; }
         }
         qualitySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                StorageSettings.setPreferredQuality(MainActivity.this, qualities[pos]);
+                StorageSettingsAndroid.setPreferredQuality(MainActivity.this, qualities[pos]);
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -1122,13 +1124,13 @@ public class MainActivity extends BaseActivity {
                 R.layout.spinner_value_chevron, android.R.id.text1, langLabels);
         lAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(lAdapter);
-        String prefLang = StorageSettings.getPreferredLanguage(this);
+        String prefLang = StorageSettingsAndroid.getPreferredLanguage(this);
         for (int i = 0; i < langs.length; i++) {
             if (langs[i].equals(prefLang)) { langSpinner.setSelection(i); break; }
         }
         langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                StorageSettings.setPreferredLanguage(MainActivity.this, langs[pos]);
+                StorageSettingsAndroid.setPreferredLanguage(MainActivity.this, langs[pos]);
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -1137,11 +1139,11 @@ public class MainActivity extends BaseActivity {
         androidx.appcompat.widget.SwitchCompat themeSwitch = findViewById(R.id.theme_switch);
         TextView themeLabel = findViewById(R.id.theme_label);
         if (themeSwitch != null && themeLabel != null) {
-            boolean isDark = StorageSettings.isDarkTheme(this);
+            boolean isDark = StorageSettingsAndroid.isDarkTheme(this);
             themeSwitch.setChecked(isDark);
             themeLabel.setText(isDark ? R.string.dark_mode_on : R.string.dark_mode_off);
             themeSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
-                StorageSettings.setDarkTheme(MainActivity.this, isChecked);
+                StorageSettingsAndroid.setDarkTheme(MainActivity.this, isChecked);
                 // Recreate to apply theme
                 recreate();
             });
@@ -1375,7 +1377,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void updateFolderDisplay() {
-        Uri uri = StorageSettings.getDownloadUri(this);
+        Uri uri = StorageSettingsAndroid.getDownloadUri(this);
         if (uri != null) {
             String path = uri.getPath();
             String display = path != null && path.contains(":")

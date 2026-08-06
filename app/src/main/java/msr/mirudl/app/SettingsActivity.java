@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.storage.StorageSettingsAndroid;
+
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.net.Uri;
@@ -37,7 +39,7 @@ public class SettingsActivity extends BaseActivity {
                             );
                         } catch (Exception ignored) {}
 
-                        StorageSettings.setDownloadUri(this, treeUri);
+                        StorageSettingsAndroid.setDownloadUri(this, treeUri);
                         selectedFolderUri = treeUri;
                         updateFolderDisplay();
                         Toast.makeText(this, "Download folder set", Toast.LENGTH_SHORT).show();
@@ -69,7 +71,7 @@ public class SettingsActivity extends BaseActivity {
         parallelBar = findViewById(R.id.parallel_seekbar);
         parallelValue = findViewById(R.id.parallel_value);
 
-        int currentParallel = StorageSettings.getParallelSegments(this);
+        int currentParallel = StorageSettingsAndroid.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
         parallelValue.setText(String.valueOf(currentParallel));
         updateParallelTint(currentParallel);
@@ -88,7 +90,7 @@ public class SettingsActivity extends BaseActivity {
                     int val = Math.max(1, progress);
                     parallelValue.setText(String.valueOf(val));
                     updateParallelTint(val);
-                    StorageSettings.setParallelSegments(SettingsActivity.this, val);
+                    StorageSettingsAndroid.setParallelSegments(SettingsActivity.this, val);
                 }
             }
         });
@@ -100,13 +102,13 @@ public class SettingsActivity extends BaseActivity {
                 R.layout.spinner_value_chevron, android.R.id.text1, qualities);
         qAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         qualitySpinner.setAdapter(qAdapter);
-        String prefQ = StorageSettings.getPreferredQuality(this);
+        String prefQ = StorageSettingsAndroid.getPreferredQuality(this);
         for (int i = 0; i < qualities.length; i++) {
             if (qualities[i].equals(prefQ)) { qualitySpinner.setSelection(i); break; }
         }
         qualitySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                StorageSettings.setPreferredQuality(SettingsActivity.this, qualities[pos]);
+                StorageSettingsAndroid.setPreferredQuality(SettingsActivity.this, qualities[pos]);
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -119,13 +121,13 @@ public class SettingsActivity extends BaseActivity {
                 R.layout.spinner_value_chevron, android.R.id.text1, langLabels);
         lAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(lAdapter);
-        String prefLang = StorageSettings.getPreferredLanguage(this);
+        String prefLang = StorageSettingsAndroid.getPreferredLanguage(this);
         for (int i = 0; i < langs.length; i++) {
             if (langs[i].equals(prefLang)) { langSpinner.setSelection(i); break; }
         }
         langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                StorageSettings.setPreferredLanguage(SettingsActivity.this, langs[pos]);
+                StorageSettingsAndroid.setPreferredLanguage(SettingsActivity.this, langs[pos]);
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -183,7 +185,7 @@ public class SettingsActivity extends BaseActivity {
                     parallelBar.setProgress(safe);
                     parallelValue.setText(String.valueOf(safe));
                     updateParallelTint(safe);
-                    StorageSettings.setParallelSegments(SettingsActivity.this, safe);
+                    StorageSettingsAndroid.setParallelSegments(SettingsActivity.this, safe);
                 })
                 .show();
     }
@@ -197,7 +199,7 @@ public class SettingsActivity extends BaseActivity {
     }
 
     private void updateFolderDisplay() {
-        Uri uri = StorageSettings.getDownloadUri(this);
+        Uri uri = StorageSettingsAndroid.getDownloadUri(this);
         if (uri != null) {
             String path = uri.getPath();
             String display = path != null && path.contains(":")

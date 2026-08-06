@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.storage.StorageSettingsAndroid;
+
 import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.model.VideoSource;
 import msr.mirudl.shared.network.MiruClientAndroid;
@@ -310,7 +312,7 @@ public final class HlsDownloader {
     // ============ FILE HELPERS ============
 
     private static Uri getDownloadDir(Context context) {
-        return StorageSettings.getDownloadUri(context);
+        return StorageSettingsAndroid.getDownloadUri(context);
     }
 
     private static DocumentFile createOutputFile(Context context, Uri treeUri,

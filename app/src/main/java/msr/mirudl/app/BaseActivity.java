@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.storage.StorageSettingsAndroid;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowManager;
@@ -12,7 +14,7 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Apply theme preference
-        boolean dark = StorageSettings.isDarkTheme(this);
+        boolean dark = StorageSettingsAndroid.isDarkTheme(this);
         AppCompatDelegate.setDefaultNightMode(
                 dark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
         );

@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.storage.StorageSettingsAndroid;
+
 import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.model.EpisodeItem;
 import msr.mirudl.shared.model.VideoSource;
@@ -103,7 +105,7 @@ public class DetailActivity extends BaseActivity {
                 Toast.makeText(this, "No episodes available", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (!StorageSettings.hasDownloadUri(this)) {
+            if (!StorageSettingsAndroid.hasDownloadUri(this)) {
                 showFolderRequiredDialog();
                 return;
             }
@@ -169,7 +171,7 @@ public class DetailActivity extends BaseActivity {
                 Toast.makeText(this, "Select at least one episode", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (!StorageSettings.hasDownloadUri(this)) {
+            if (!StorageSettingsAndroid.hasDownloadUri(this)) {
                 showFolderRequiredDialog();
                 return;
             }
@@ -227,7 +229,7 @@ public class DetailActivity extends BaseActivity {
                     handler.post(() -> Toast.makeText(this, "No sources found", Toast.LENGTH_SHORT).show());
                     return;
                 }
-                String prefLang = StorageSettings.getPreferredLanguage(this);
+                String prefLang = StorageSettingsAndroid.getPreferredLanguage(this);
                 VideoSource selected = null;
                 for (VideoSource vs : langs) {
                     if (vs.language.equals(prefLang)) { selected = vs; break; }
@@ -421,13 +423,13 @@ public class DetailActivity extends BaseActivity {
     }
 
     private void startDownload(EpisodeItem ep) {
-        if (!StorageSettings.hasDownloadUri(this)) {
+        if (!StorageSettingsAndroid.hasDownloadUri(this)) {
             showFolderRequiredDialog();
             return;
         }
 
 
-        String quality = StorageSettings.getPreferredQuality(this);
+        String quality = StorageSettingsAndroid.getPreferredQuality(this);
         String language = ep.language != null ? ep.language : "jpn";
         String hlsUrl = ep.hlsUrl;
 
@@ -505,7 +507,7 @@ public class DetailActivity extends BaseActivity {
         executor.execute(() -> {
             try {
                 List<DownloadManager.Job> jobs = new ArrayList<>();
-                String prefLang = StorageSettings.getPreferredLanguage(this);
+                String prefLang = StorageSettingsAndroid.getPreferredLanguage(this);
 
                 for (EpisodeItem ep : list) {
                     try {
@@ -534,7 +536,7 @@ public class DetailActivity extends BaseActivity {
 
                         DownloadManager.Job job = DownloadManager.enqueue(
                                 animeTitle, "Episode " + ep.getLabel(),
-                                StorageSettings.getPreferredQuality(this),
+                                StorageSettingsAndroid.getPreferredQuality(this),
                                 language != null ? language : "jpn", hlsUrl
                         );
                         jobs.add(job);

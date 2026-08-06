@@ -36,4 +36,36 @@ object StorageSettings {
     fun setConcurrentDownloads(storage: AppStorage, value: Int) {
         storage.setInt(KEY_CONCURRENT_DOWNLOADS, value)
     }
+
+    private const val KEY_QUALITY = "preferred_quality"
+    private const val KEY_LANGUAGE = "preferred_language"
+    private const val KEY_DARK_THEME = "dark_theme"
+
+    fun getPreferredQuality(storage: AppStorage): String {
+        return storage.getString(KEY_QUALITY, "1080p")
+    }
+
+    fun setPreferredQuality(storage: AppStorage, quality: String) {
+        storage.setString(KEY_QUALITY, quality)
+    }
+
+    fun getPreferredLanguage(storage: AppStorage): String {
+        return storage.getString(KEY_LANGUAGE, "jpn")
+    }
+
+    fun setPreferredLanguage(storage: AppStorage, lang: String) {
+        storage.setString(KEY_LANGUAGE, lang)
+    }
+
+    fun isDarkTheme(storage: AppStorage): Boolean {
+        return storage.getBoolean(KEY_DARK_THEME, true)
+    }
+
+    fun setDarkTheme(storage: AppStorage, dark: Boolean) {
+        storage.setBoolean(KEY_DARK_THEME, dark)
+    }
+
+    fun hasDownloadUri(storage: AppStorage): Boolean {
+        return getDownloadUri(storage) != null
+    }
 }

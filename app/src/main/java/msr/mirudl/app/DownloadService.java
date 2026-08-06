@@ -1,5 +1,7 @@
 package msr.mirudl.app;
 
+import msr.mirudl.shared.storage.StorageSettingsAndroid;
+
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -79,7 +81,7 @@ public class DownloadService extends Service {
     /** Spawns worker lanes up to the user's concurrent-downloads limit, each claiming and
      *  processing jobs one after another until the queue is empty. */
     private void launchWorkers() {
-        int limit = Math.max(1, Math.min(MAX_LANES, StorageSettings.getConcurrentDownloads(this)));
+        int limit = Math.max(1, Math.min(MAX_LANES, StorageSettingsAndroid.getConcurrentDownloads(this)));
         synchronized (lanesLock) {
             while (activeWorkers.get() < limit) {
                 DownloadManager.Job job = DownloadManager.claimNextQueuedJob();
@@ -124,7 +126,7 @@ public class DownloadService extends Service {
             String output = HlsDownloader.download(
                     this, playUrl,
                     job.animeTitle + " - " + job.episodeTitle,
-                    StorageSettings.getParallelSegments(this),
+                    StorageSettingsAndroid.getParallelSegments(this),
                     new HlsDownloader.ProgressListener() {
                         @Override
                         public void onProgress(int percent, int done, int total) {
