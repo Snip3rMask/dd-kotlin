@@ -15,9 +15,9 @@ import msr.mirudl.shared.util.urlEncode
 /**
  * Shared port of `msr.mirudl.app.MiruClient` (Java).
  *
- * JSON parsing uses `kotlinx.serialization` instead of `org.json`
- * (Android/JVM-only). `@Serializable` DTOs match the original
- * `optString`/`optInt`/`optBoolean` defaults for absent fields.
+ * JSON parsing uses `kotlinx.serialization` instead of `org.json`.
+ * `@Serializable` DTOs match the original `optString`/`optInt`/
+ * `optBoolean` defaults for absent fields.
  *
  * `BASE` keeps the exact XOR-obfuscation of the original
  * (`https://anidb.app`), and every method mirrors the Java original
@@ -213,12 +213,7 @@ object MiruClient {
         val body = get(url)
         val response = json.decodeFromString<EpisodesResponse>(body)
         return response.episodes.map { ep ->
-            EpisodeItem(
-                id = ep.id,
-                number = ep.number,
-                number2 = ep.number2,
-                filler = ep.filler
-            )
+            EpisodeItem(id = ep.id, number = ep.number, number2 = ep.number2, filler = ep.filler)
         }
     }
 
@@ -232,18 +227,12 @@ object MiruClient {
         val body = get(url)
         val response = json.decodeFromString<LanguagesResponse>(body)
         return response.languages.map { lang ->
-            VideoSource(
-                quality = lang.name,
-                url = lang.embed_url,
-                language = lang.code,
-                server = "MiruDL"
-            )
+            VideoSource(quality = lang.name, url = lang.embed_url, language = lang.code, server = "MiruDL")
         }
     }
 
     suspend fun resolveHlsFromEmbed(embedUrl: String): String? {
         val html = getHtml(embedUrl)
-        // Match file: '...master.m3u8' or file: "...master.m3u8"
         val fileIdx = html.indexOf("file:")
         if (fileIdx < 0) return null
         var quoteStart = html.indexOf("'", fileIdx)
@@ -256,6 +245,77 @@ object MiruClient {
         return html.substring(quoteStart + 1, quoteEnd)
     }
 
+    // ==================== QUALITIES ====================
+
+    suspend fun getQualities(masterUrl: String): List<VideoSource> {
+        val playlist = get(masterUrl)
+        val variants = mutableListOf<VideoSource>()
+        var pendingLine: String? = null
+        for (raw in playlist.split("\\r?\\n".toRegex())) {
+            val line = raw.trim()
+            if (line.startsWith("#EXT-X-STREAM-INF")) {
+                pendingLine = line
+            } else if (pendingLine != null && line.isNotEmpty() && !line.startsWith("#")) {
+                val quality = extractResolution(pendingLine)
+                val url = resolveUrl(line, masterUrl)
+                variants.add(VideoSource(quality = quality, url = url))
+                pendingLine = null
+            }
+        }
+        if (variants.isEmpty()) {
+            variants.add(VideoSource(quality = "Auto", url = masterUrl))
+        }
+        return variants
+    }
+
+    // ==================== ANIME TITLE ====================
+
+    suspend fun getAnimeTitle(animeId: String): String? {
+        return try {
+            val url = when {
+                animeId.startsWith("http") -> animeId
+                animeId.startsWith("/") -> BASE + animeId
+                else -> "$BASE/anime/$animeId"
+            }
+            val html = getHtml(url)
+            val titleStart = html.indexOf("property=\"og:title\" content=\"")
+            if (titleStart >= 0) {
+                val start = titleStart + 32
+                val end = html.indexOf("\"", start)
+                if (end > 0) return html.substring(start, end)
+            }
+            null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    // ==================== PRIVATE HELPERS ====================
+
+    private fun extractResolution(infLine: String): String {
+        val resIdx = infLine.indexOf("RESOLUTION=")
+        if (resIdx >= 0) {
+            val end = infLine.indexOf(",", resIdx).takeIf { it >= 0 } ?: infLine.length
+            return infLine.substring(resIdx + 11, end)
+        }
+        val bwIdx = infLine.indexOf("BANDWIDTH=")
+        if (bwIdx >= 0) {
+            val end = infLine.indexOf(",", bwIdx).takeIf { it >= 0 } ?: infLine.length
+            return infLine.substring(bwIdx + 10, end) + "bps"
+        }
+        return "Auto"
+    }
+
+    private fun resolveUrl(value: String, base: String): String {
+        if (value.startsWith("http://") || value.startsWith("https://")) return value
+        if (value.startsWith("/")) {
+            val slash = base.indexOf("/", 8)
+            return (if (slash > 0) base.substring(0, slash) else base) + value
+        }
+        val slash = base.lastIndexOf("/")
+        return (if (slash > 0) base.substring(0, slash + 1) else "$base/") + value
+    }
+
     // ==================== PRIVATE DTOs ====================
 
     @Serializable
@@ -263,10 +323,7 @@ object MiruClient {
 
     @Serializable
     private data class EpisodeDto(
-        val id: Int = 0,
-        val number: Int = 0,
-        val number2: Int = 0,
-        val filler: Boolean = false
+        val id: Int = 0, val number: Int = 0, val number2: Int = 0, val filler: Boolean = false
     )
 
     @Serializable
@@ -274,8 +331,6 @@ object MiruClient {
 
     @Serializable
     private data class LanguageDto(
-        val name: String = "Source",
-        val embed_url: String = "",
-        val code: String = "jpn"
+        val name: String = "Source", val embed_url: String = "", val code: String = "jpn"
     )
 }

@@ -3,6 +3,7 @@ package msr.mirudl.app;
 import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.model.EpisodeItem;
 import msr.mirudl.shared.model.VideoSource;
+import msr.mirudl.shared.network.MiruClientAndroid;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -53,7 +54,6 @@ public class DetailActivity extends BaseActivity {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final MiruClient client = MiruClient.getInstance();
     private List<EpisodeItem> episodes = new ArrayList<>();
 
     @Override
@@ -192,7 +192,7 @@ public class DetailActivity extends BaseActivity {
         loadingBar.setVisibility(View.VISIBLE);
         executor.execute(() -> {
             try {
-                episodes = client.getEpisodes(animeId);
+                episodes = MiruClientAndroid.getEpisodes(animeId);
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
                     String count = episodes.size() + " episodes";
@@ -222,7 +222,7 @@ public class DetailActivity extends BaseActivity {
     private void resolveAndDownload(EpisodeItem ep) {
         executor.execute(() -> {
             try {
-                List<VideoSource> langs = client.getEpisodeLanguages(ep.id);
+                List<VideoSource> langs = MiruClientAndroid.getEpisodeLanguages(ep.id);
                 if (langs.isEmpty()) {
                     handler.post(() -> Toast.makeText(this, "No sources found", Toast.LENGTH_SHORT).show());
                     return;
@@ -234,7 +234,7 @@ public class DetailActivity extends BaseActivity {
                 }
                 if (selected == null) selected = langs.get(0);
 
-                String hlsUrl = client.resolveHlsFromEmbed(selected.url);
+                String hlsUrl = MiruClientAndroid.resolveHlsFromEmbed(selected.url);
                 if (hlsUrl == null) {
                     handler.post(() -> Toast.makeText(this, "No HLS URL found", Toast.LENGTH_SHORT).show());
                     return;
@@ -433,7 +433,7 @@ public class DetailActivity extends BaseActivity {
 
         executor.execute(() -> {
             try {
-                List<VideoSource> variants = client.getQualities(hlsUrl);
+                List<VideoSource> variants = MiruClientAndroid.getQualities(hlsUrl);
                 String finalUrl = hlsUrl;
                 // Auto-pick preferred quality from Settings — no dialog needed
                 for (VideoSource v : variants) {
@@ -514,7 +514,7 @@ public class DetailActivity extends BaseActivity {
                         String langName = ep.langName;
 
                         if (hlsUrl == null) {
-                            List<VideoSource> langs = client.getEpisodeLanguages(ep.id);
+                            List<VideoSource> langs = MiruClientAndroid.getEpisodeLanguages(ep.id);
                             VideoSource selected = null;
                             for (VideoSource vs : langs) {
                                 if (vs.language.equals(prefLang)) { selected = vs; break; }
@@ -522,7 +522,7 @@ public class DetailActivity extends BaseActivity {
                             if (selected == null && !langs.isEmpty()) selected = langs.get(0);
                             if (selected == null) continue;
 
-                            hlsUrl = client.resolveHlsFromEmbed(selected.url);
+                            hlsUrl = MiruClientAndroid.resolveHlsFromEmbed(selected.url);
                             if (hlsUrl == null) continue;
 
                             language = selected.language;

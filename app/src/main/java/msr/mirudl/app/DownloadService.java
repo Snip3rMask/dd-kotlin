@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import msr.mirudl.shared.network.MiruClientAndroid;
 
 public class DownloadService extends Service {
     private static final String ACTION_START = "start";
@@ -114,7 +115,7 @@ public class DownloadService extends Service {
 
             String playUrl = job.hlsUrl;
             if (playUrl != null && playUrl.contains("/embed/")) {
-                playUrl = MiruClient.getInstance().resolveHlsFromEmbed(playUrl);
+                playUrl = MiruClientAndroid.resolveHlsFromEmbed(playUrl);
             }
 
             final DownloadManager.Job currentJob = job;

@@ -2,6 +2,7 @@ package msr.mirudl.app;
 
 import msr.mirudl.shared.model.AnimeItem;
 import msr.mirudl.shared.model.DownloadRecord;
+import msr.mirudl.shared.network.MiruClientAndroid;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -82,7 +83,6 @@ public class MainActivity extends BaseActivity {
     private TextView emptyText;
     private AnimeGridAdapter gridAdapter;
     private SwipeRefreshLayout swipeRefresh;
-    private final MiruClient client = MiruClient.getInstance();
 
     // Downloads
     private RecyclerView downloadsList;
@@ -303,7 +303,7 @@ public class MainActivity extends BaseActivity {
         emptyText.setVisibility(View.GONE);
         executor.execute(() -> {
             try {
-                List<AnimeItem> results = client.browseCurrentlyAiring();
+                List<AnimeItem> results = MiruClientAndroid.browseCurrentlyAiring();
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
                     swipeRefresh.setRefreshing(false);
@@ -330,7 +330,7 @@ public class MainActivity extends BaseActivity {
         emptyText.setVisibility(View.GONE);
         executor.execute(() -> {
             try {
-                List<AnimeItem> results = client.search(query);
+                List<AnimeItem> results = MiruClientAndroid.search(query);
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
                     swipeRefresh.setRefreshing(false);

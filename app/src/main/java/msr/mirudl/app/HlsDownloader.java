@@ -2,6 +2,7 @@ package msr.mirudl.app;
 
 import msr.mirudl.shared.model.DownloadRecord;
 import msr.mirudl.shared.model.VideoSource;
+import msr.mirudl.shared.network.MiruClientAndroid;
 
 import android.content.Context;
 import android.net.Uri;
@@ -271,7 +272,7 @@ public final class HlsDownloader {
     private static String getText(String url) throws IOException {
         Request req = new Request.Builder().url(url)
                 .header("User-Agent", "Mozilla/5.0")
-                .header("Referer", MiruClient.BASE + "/")
+                .header("Referer", MiruClientAndroid.getBASE() + "/")
                 .build();
         try (Response resp = CLIENT.newCall(req).execute()) {
             if (!resp.isSuccessful() || resp.body() == null)
