@@ -1,7 +1,7 @@
 package msr.mirudl.shared.download
 
-import java.util.UUID
 import java.util.Collections
+import kotlin.random.Random
 
 /**
  * Shared port of `msr.mirudl.app.DownloadManager` (Java).
@@ -9,15 +9,11 @@ import java.util.Collections
  * NO `Serializable` — see migration constraint #5.
  * Job list is a `Collections.synchronizedList` for thread safety.
  * All methods are `synchronized` — same locking strategy as the Java original.
- *
- * Phase 4.1: Job data class + constants.
- * Phase 4.2: Query methods (this step).
- * Phase 4.3a: Mutating methods.
  */
 object DownloadManager {
 
     private val jobs: MutableList<Job> = Collections.synchronizedList(mutableListOf())
-    @Volatile private var running = false
+    private var running = false
 
     @Synchronized
     fun find(id: String): Job? {
@@ -80,5 +76,54 @@ object DownloadManager {
     @Synchronized
     fun isRunning(): Boolean {
         return running
+    }
+}
+
+/**
+ * Generates a UUID-like string for commonMain (no java.util.UUID dependency).
+ */
+internal fun generateId(): String {
+    val chars = "0123456789abcdef"
+    return buildString(36) {
+        repeat(36) { i ->
+            when (i) {
+                8, 13, 18, 23 -> append('-')
+                else -> append(chars[Random.nextInt(chars.length)])
+            }
+        }
+    }
+}
+
+/**
+ * Shared Job data class — port of `msr.mirudl.app.DownloadManager.Job` (Java).
+ *
+ * NO `Serializable` — see migration constraint #5.
+ * The 5-arg constructor + auto-generated fields (id, status, etc.)
+ * match the Java original exactly.
+ */
+data class Job @JvmOverloads constructor(
+    @JvmField var animeTitle: String? = null,
+    @JvmField var episodeTitle: String? = null,
+    @JvmField var quality: String? = null,
+    @JvmField var language: String? = null,
+    @JvmField var hlsUrl: String? = null
+) {
+    @JvmField val id: String = generateId()
+    @JvmField var status: String = STATUS_QUEUED
+    @JvmField var percent: Int = 0
+    @JvmField var bytesPerSecond: Long = 0L
+    @JvmField var cancelled: Boolean = false
+    @JvmField var finished: Boolean = false
+    @JvmField var error: String? = null
+    @JvmField var outputUri: String? = null
+    @JvmField var currentIndex: Int = 1
+    @JvmField var totalEpisodes: Int = 1
+
+    companion object {
+        const val STATUS_QUEUED = "Queued"
+        const val STATUS_DOWNLOADING = "Downloading"
+        const val STATUS_COMPLETED = "Completed"
+        const val STATUS_FAILED = "Failed"
+        const val STATUS_CANCELLED = "Cancelled"
     }
 }
