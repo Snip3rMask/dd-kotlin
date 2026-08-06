@@ -2,6 +2,8 @@ package msr.mirudl.app;
 
 import msr.mirudl.shared.storage.StorageSettingsAndroid;
 import msr.mirudl.shared.download.DownloadManagerAndroid;
+import msr.mirudl.shared.download.HlsDownloader;
+import msr.mirudl.shared.download.HlsDownloaderAndroid;
 import msr.mirudl.shared.download.Job;
 
 import android.app.PendingIntent;
@@ -121,7 +123,7 @@ public class DownloadService extends Service {
             final Job currentJob = job;
             final long[] lastNotifTime = {0};
 
-            String output = HlsDownloader.download(
+            String output = HlsDownloaderAndroid.download(
                     this, playUrl,
                     job.animeTitle + " - " + job.episodeTitle,
                     StorageSettingsAndroid.getParallelSegments(this),

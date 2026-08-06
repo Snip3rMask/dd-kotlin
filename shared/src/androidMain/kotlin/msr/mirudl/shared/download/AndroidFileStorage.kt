@@ -74,6 +74,19 @@ object AndroidFileStorage : FileStorage {
         null
     }
 
+    override fun createFile(parent: String, mimeType: String, name: String): String? = try {
+        if (isContentUri(parent)) {
+            val parentDoc = DocumentFile.fromTreeUri(appContext, Uri.parse(parent)) ?: return null
+            parentDoc.findFile(name)?.delete()
+            parentDoc.createFile(mimeType, name)?.uri?.toString()
+        } else {
+            val f = File(parent, name)
+            if (f.createNewFile()) f.absolutePath else null
+        }
+    } catch (e: Exception) {
+        null
+    }
+
     override fun deleteFile(path: String): Boolean = try {
         if (isContentUri(path)) {
             DocumentFile.fromSingleUri(appContext, Uri.parse(path))?.delete() ?: false

@@ -5,12 +5,15 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 
+import msr.mirudl.shared.download.AndroidFileStorage;
+
 public class MiruDLApp extends Application {
     public static final String CHANNEL_DOWNLOADS = "mirudl_downloads";
 
     @Override
     public void onCreate() {
         super.onCreate();
+        AndroidFileStorage.init(this);
         CrashLogger.init(this);
         createNotificationChannels();
     }

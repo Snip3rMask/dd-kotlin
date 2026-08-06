@@ -3,28 +3,28 @@ package msr.mirudl.shared.download
 import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import msr.mirudl.shared.model.DownloadRecord
+import msr.mirudl.shared.network.HlsParser
 import msr.mirudl.shared.network.HttpClientProvider
+import msr.mirudl.shared.storage.AppStorage
+import msr.mirudl.shared.storage.DownloadEntryStore
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Shared download engine — port of the segment-download loop and byte
- * fetch from `app`'s `HlsDownloader.java`.
+ * Shared download engine — port of `app`'s `HlsDownloader.java`.
  *
- * This step (4.5) ports only the parallel download loop and byte-fetch
- * helper. Playlist parsing lives in [msr.mirudl.shared.network.HlsParser]
- * (already ported in an earlier step). Final assembly and the top-level
- * `download()` method arrive in 4.6.
- *
- * Concurrency is handled via Kotlin coroutines + [Semaphore] instead of
- * the Java `ExecutorService`, and the speed sampler runs as a coroutine
- * with `delay()` instead of `ScheduledExecutorService`.
+ * The full `download()` orchestration: playlist parsing, parallel segment
+ * download, final stitching into the SAF output file, and download-record
+ * persistence via [DownloadEntryStore].
  */
 object HlsDownloader {
 
+    private const val BUFFER_SIZE = 64 * 1024
     private const val MAX_PARALLEL = 64
 
     interface ProgressListener {
@@ -34,6 +34,169 @@ object HlsDownloader {
 
     interface CancelCheck {
         fun isCancelled(): Boolean
+    }
+
+    // ==================== FULL DOWNLOAD ====================
+
+    /**
+     * Downloads an HLS stream: parses the playlist, downloads segments
+     * in parallel to a temp dir, stitches them into an MP4 output file
+     * via [storage] SAF/local paths, and persists a [DownloadRecord].
+     *
+     * @param playlistUrl      master or variant playlist URL
+     * @param fileName         display name (e.g. "Anime Title - Episode 5")
+     * @param parallelSegments max concurrent segment downloads
+     * @param downloadTreeUri  SAF tree URI for the download folder (null → error)
+     * @param storage          platform file storage
+     * @param entryStorage     AppStorage for persisting download records
+     * @param progress         optional progress/speed callbacks
+     * @param cancel           checked between segments and after download
+     * @return the output file URI string
+     */
+    suspend fun download(
+        playlistUrl: String,
+        fileName: String,
+        parallelSegments: Int,
+        downloadTreeUri: String?,
+        storage: FileStorage,
+        entryStorage: AppStorage,
+        progress: ProgressListener?,
+        cancel: CancelCheck?
+    ): String {
+        // 1. Read master playlist
+        var currentUrl = playlistUrl
+        var master = HlsParser.getText(currentUrl)
+
+        // 2. If master has variants, pick first quality
+        if (master.contains("#EXT-X-STREAM-INF")) {
+            val variants = HlsParser.qualities(currentUrl)
+            if (variants.isNotEmpty()) {
+                currentUrl = variants[0].url
+                master = HlsParser.getText(currentUrl)
+            }
+        }
+
+        // 3. Check for encryption
+        if (master.contains("#EXT-X-KEY")) {
+            throw IOException("Encrypted streams are not supported")
+        }
+
+        // 4. Parse segments
+        val segments = HlsParser.parseSegments(master, currentUrl)
+        if (segments.isEmpty()) {
+            throw IOException("No HLS segments found")
+        }
+
+        // 5. Parse init map
+        val mapUrl = HlsParser.parseInitMap(master, currentUrl)
+
+        // 6. Create temp dir
+        val tempDirName = "hls_${System.currentTimeMillis()}"
+        val tempDir = storage.createDir(storage.cacheDir(), tempDirName)
+            ?: throw IOException("Cannot create temp dir")
+
+        // 7. Download segments
+        downloadSegments(segments, storage, tempDir, HlsParser.clampParallel(parallelSegments), progress, cancel)
+
+        // 8. Cancel check after download
+        if (cancel != null && cancel.isCancelled()) {
+            storage.deleteFile(tempDir)
+            throw IOException("Download cancelled by user")
+        }
+
+        // 9. Create output file
+        val cleanName = HlsParser.sanitize(fileName)
+        val animeDir = HlsParser.extractParent(fileName)
+        if (downloadTreeUri == null) {
+            throw IOException("Select download folder in Settings")
+        }
+        val outFileUri = createOutputFile(storage, downloadTreeUri, animeDir, "$cleanName.mp4")
+
+        // 10. Stitch segments into output
+        val out = storage.openOutput(outFileUri)
+            ?: throw IOException("Cannot open output stream")
+
+        try {
+            if (mapUrl != null) writeUrlToStream(mapUrl, out)
+            for (i in segments.indices) {
+                val segPath = "$tempDir/seg_$i.ts"
+                val segInput = storage.openInput(segPath) ?: continue
+                segInput.use { input ->
+                    val buf = ByteArray(BUFFER_SIZE)
+                    while (true) {
+                        val read = input.read(buf)
+                        if (read == -1) break
+                        out.write(buf, 0, read)
+                    }
+                }
+            }
+        } finally {
+            out.close()
+        }
+
+        // 11. Clean up temp dir
+        storage.deleteFile(tempDir)
+
+        // 12. Save download entry
+        val size = storage.size(outFileUri)
+        saveDownloadEntry(entryStorage, outFileUri, cleanName, animeDir, size)
+
+        return outFileUri
+    }
+
+    // ==================== OUTPUT FILE CREATION ====================
+
+    private fun createOutputFile(
+        storage: FileStorage,
+        treeUri: String,
+        folderName: String,
+        fileName: String
+    ): String {
+        // Create "MiruDL Downloads" root
+        val mirudlRoot = storage.createDir(treeUri, "MiruDL Downloads")
+            ?: throw IOException("Cannot create root folder")
+
+        // Create anime subfolder
+        val animeDir = storage.createDir(mirudlRoot, HlsParser.sanitize(folderName))
+            ?: throw IOException("Cannot create anime folder")
+
+        // Delete existing file with same name
+        val existing = storage.findFile(animeDir, fileName)
+        if (existing != null) storage.deleteFile(existing)
+
+        // Create new file
+        return storage.createFile(animeDir, "video/mp4", fileName)
+            ?: throw IOException("Cannot create output file")
+    }
+
+    // ==================== WRITE URL TO STREAM ====================
+
+    private suspend fun writeUrlToStream(url: String, out: OutputStream) {
+        val data = downloadBytes(url)
+        if (data.isNotEmpty()) {
+            out.write(data)
+        }
+    }
+
+    // ==================== DOWNLOAD RECORD ====================
+
+    private fun saveDownloadEntry(
+        entryStorage: AppStorage,
+        uri: String,
+        title: String,
+        parent: String,
+        size: Long
+    ) {
+        try {
+            val entry = DownloadRecord(
+                uri = uri,
+                title = title,
+                parent = parent,
+                size = size,
+                completedAt = System.currentTimeMillis()
+            )
+            DownloadEntryStore.add(entryStorage, entry)
+        } catch (_: Exception) {}
     }
 
     // ==================== BYTE FETCH ====================
@@ -66,12 +229,6 @@ object HlsDownloader {
      * Downloads HLS segments in parallel, writing each to a temp file
      * under [tempDir] via [storage]. Speed is sampled every 700 ms with
      * exponential moving-average smoothing, exactly like the Java original.
-     *
-     * @param storage    platform file storage (cache dir, file I/O)
-     * @param tempDir    absolute path of the caller-created temp directory
-     * @param parallel   max concurrent downloads (clamped to [MAX_PARALLEL])
-     * @param progress   optional progress/speed callbacks
-     * @param cancel     checked between segments and during the wait loop
      */
     suspend fun downloadSegments(
         urls: List<String>,
@@ -88,8 +245,6 @@ object HlsDownloader {
         val done = java.util.concurrent.atomic.AtomicInteger(0)
         val totalBytes = AtomicLong(0)
 
-        // Speed ticker runs in its own scope so coroutineScope below
-        // (which waits only for download jobs) doesn't deadlock on it.
         val tickerScope = CoroutineScope(Dispatchers.Default)
         val tickerJob = tickerScope.launch {
             var lastSampleTime = System.currentTimeMillis()

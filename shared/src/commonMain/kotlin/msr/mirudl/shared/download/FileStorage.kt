@@ -32,6 +32,9 @@ interface FileStorage {
     /** Returns the child `name` under `parent` if it exists, else null. */
     fun findFile(parent: String, name: String): String?
 
+    /** Creates a new file under `parent`; returns its path/URI, or null on failure. */
+    fun createFile(parent: String, mimeType: String, name: String): String?
+
     /** Recursively deletes a local file/dir or a document; true on success. */
     fun deleteFile(path: String): Boolean
 
