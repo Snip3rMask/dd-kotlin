@@ -243,7 +243,7 @@ rework when they move to `commonMain`:
       bar, download dialogs) in Compose — finishes `DetailActivity`.
 ^- [x] 6.6 Rewrite `MainActivity`'s Home tab (search + anime grid) in
       Compose.
-- [ ] 6.7 Rewrite `MainActivity`'s Downloads tab in Compose.
+- [x] 6.7 Rewrite `MainActivity`'s Downloads tab in Compose.
 - [ ] 6.8 Rewrite `MainActivity`'s Settings tab in Compose — finishes the
       full Views → Compose migration.
 
@@ -601,4 +601,10 @@ rework when they move to `commonMain`:
   `app` now depends on `implementation project(':shared')`. A placeholder
   `SharedInfo.kt` in `commonMain` proves the source set compiles for both
   targets. No real logic moved yet — verify the next CI build stays green.
+- Phase 6.7 done: rewrote MainActivity Downloads tab in Compose
+  (DownloadsComposable.kt), deleted DownloadAdapter.kt, removed unused
+  RecyclerView/LinearLayoutManager imports, fixed drawable refs
+  (ic_cancel→ic_close, ic_expand_less/more→ic_chevron_down/right).
+  DownloadEntry.java kept (still used by SAF delete dialogs). CI push
+  pending verification.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")
