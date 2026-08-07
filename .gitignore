@@ -24,3 +24,4 @@ app/release.keystore.base64.txt
 /shared/build
 ci-logs/
 ci-new/
+build-logs.zip
