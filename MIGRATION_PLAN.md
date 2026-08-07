@@ -234,7 +234,7 @@ rework when they move to `commonMain`:
 - [x] 6.1 Rewrite `AboutActivity` (smallest screen) in Jetpack Compose,
       still Android-only, to validate the Compose setup end-to-end before
       touching bigger screens.
-- [ ] 6.2 Rewrite `DeveloperActivity` in Compose.
+- [x] 6.2 Rewrite `DeveloperActivity` in Compose.
 - [ ] 6.3 Rewrite `SettingsActivity` in Compose.
 - [ ] 6.4 Rewrite `DetailActivity`'s episode list (just the list/grid of
       episodes) in Compose, reusing `EpisodeAdapter`'s logic as a
@@ -309,6 +309,7 @@ rework when they move to `commonMain`:
 ---
 ### Progress log
 
+- **2026-08-07** Step 6.2 ✅ — DeveloperActivity → Compose. Deleted activity_developer.xml. CI pending.
 - **2026-08-07** Step 6.1 ✅ — AboutActivity → Compose. Deleted activity_about.xml. CI pending.
 - **2026-08-07** Step 6.0 ✅ — Compose setup (BOM + plugin + Material3 + placeholder activity). CI pending.
 - **2026-08-07** Step 5.13 ✅ — `MainActivity.java` → Kotlin. Dead bridges deleted. CI green after fixes (commit 0e83fe3).
