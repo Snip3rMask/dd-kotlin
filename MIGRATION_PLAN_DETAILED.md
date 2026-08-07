@@ -518,7 +518,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 
 ### Phase 6 — Views → Compose
 - [x] 6.0 Compose setup (BOM + activity-compose + Material3 in build.gradle)
-- [ ] 6.1 AboutActivity → Compose (smallest, proof-of-concept)
+- [x] 6.1 AboutActivity → Compose (smallest, proof-of-concept)
 - [ ] 6.2 DeveloperActivity → Compose
 - [ ] 6.3 SettingsActivity → Compose
 - [ ] 6.4 DetailActivity episode list → Compose (LazyColumn/LazyVerticalGrid)
