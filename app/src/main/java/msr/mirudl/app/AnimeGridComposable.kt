@@ -91,7 +91,7 @@ private fun AnimeGridCard(anime: AnimeItem, onClick: () -> Unit) {
                 factory = { ctx ->
                     ImageView(ctx).apply {
                         scaleType = ImageView.ScaleType.CENTER_CROP
-                        setBackgroundColor(0xFFF0F1F3)
+                        setBackgroundColor(0xFFF0F1F3.toInt())
                     }
                 },
                 update = { iv ->
@@ -123,7 +123,7 @@ private fun AnimeGridCard(anime: AnimeItem, onClick: () -> Unit) {
                         modifier = Modifier.size(11.dp)
                     )
                     Text(
-                        text = anime.rating,
+                        text = anime.rating ?: "",
                         color = Color.White,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
