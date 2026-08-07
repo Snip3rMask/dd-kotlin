@@ -241,7 +241,7 @@ rework when they move to `commonMain`:
       `LazyColumn`/`LazyVerticalGrid`.
 - [x] 6.5 Rewrite the rest of `DetailActivity` (search row, select-mode
       bar, download dialogs) in Compose — finishes `DetailActivity`.
-- [ ] 6.6 Rewrite `MainActivity`'s Home tab (search + anime grid) in
+^- [x] 6.6 Rewrite `MainActivity`'s Home tab (search + anime grid) in
       Compose.
 - [ ] 6.7 Rewrite `MainActivity`'s Downloads tab in Compose.
 - [ ] 6.8 Rewrite `MainActivity`'s Settings tab in Compose — finishes the
