@@ -225,7 +225,7 @@ rework when they move to `commonMain`:
       `StorageSettings` instead of its own copy.
 - [x] 5.12 `DetailActivity.java` → Kotlin, now calling `shared`'s
       `MiruClient`/`DownloadManager` instead of its own copies.
-- [ ] 5.13 `MainActivity.java` → Kotlin (biggest file, last in this phase),
+- [x] 5.13 `MainActivity.java` → Kotlin (biggest file, last in this phase),
       now calling `shared` for all business logic.
 
 ## Phase 6 — UI rework: Views → Compose (prerequisite for real UI sharing)

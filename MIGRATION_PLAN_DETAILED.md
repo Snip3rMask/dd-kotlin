@@ -6,9 +6,7 @@ single commit and CI (`./gradlew assembleDebug` via GitHub Actions) stays
 green after every step. The rule of thumb: **one sub-step = one green
 build; `app` must always compile and run.**
 
-Current state (verified 2026-08-07): Phases 0-4 fully done. Phase 5
-steps 5.1-5.11 complete. `app` has 3 remaining Java files:
-DetailActivity.java (603 lines), MainActivity.java (1433 lines),
+Current state (verified 2026-08-07): Phases 0-5 fully done. `app` has 1 remaining Java file:
 DownloadEntry.java (55 lines, stays until Phase 6.7). 13 XML layouts remain.
 
 ---
@@ -363,7 +361,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
   - **5.12b** Delete bridges whose last caller was DetailActivity (grep first).
   - **5.12c** Verify: `./gradlew assembleDebug`, push, CI green.
 
-- [ ] 5.13 `MainActivity.java` → Kotlin (1433 lines, biggest file).
+- [x] 5.13 `MainActivity.java` → Kotlin (1433 lines, biggest file).
   - **5.13a** Convert: Java → Kotlin, preserving all behavior.
     - All shared API calls → direct suspend (coroutines).
     - `UpdateChecker` → shared `UpdateChecker` suspend.
@@ -516,7 +514,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 5.10 DeveloperActivity.java → Kotlin
 - [x] 5.11 SettingsActivity.java → Kotlin
 - [x] 5.12 DetailActivity.java → Kotlin (sub: 5.12a convert, 5.12b bridge cleanup, 5.12c verify)
-- [ ] 5.13 MainActivity.java → Kotlin (sub: 5.13a convert, 5.13b delete all bridges, 5.13c verify)
+- [x] 5.13 MainActivity.java → Kotlin (sub: 5.13a convert, 5.13b delete all bridges, 5.13c verify)
 
 ### Phase 6 — Views → Compose
 - [ ] 6.0 Compose setup (BOM + activity-compose + Material3 in build.gradle)
