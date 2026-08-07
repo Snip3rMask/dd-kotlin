@@ -837,7 +837,7 @@ class MainActivity : BaseActivity() {
             setTextColor(getColor(R.color.text_secondary))
             textSize = 10f
             typeface = Typeface.MONOSPACE
-            setLineSpacing(dp(2), 1f)
+            setLineSpacing(dp(2).toFloat(), 1f)
             setPadding(dp(12), dp(12), dp(12), dp(12))
         }
         scroll.addView(logText)
@@ -1178,7 +1178,7 @@ class MainActivity : BaseActivity() {
             text = changelog
             setTextColor(getColor(R.color.text_secondary))
             textSize = 12.5f
-            setLineSpacing(dp(3), 1f)
+            setLineSpacing(dp(3).toFloat(), 1f)
             setPadding(dp(14), dp(12), dp(14), dp(12))
         }
         scroll.addView(changelogText)
