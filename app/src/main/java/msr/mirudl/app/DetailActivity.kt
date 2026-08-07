@@ -571,7 +571,7 @@ class DetailActivity : BaseActivity() {
         val downloaded = mutableSetOf<String>()
         for (e in DownloadEntryStore.all(storage)) {
             if (animeTitle != null && animeTitle == e.parentName()) {
-                val epLabel = e.title.replace("Episode ", "").trim()
+                val epLabel = (e.title ?: "").replace("Episode ", "").trim()
                 if (epLabel.isNotEmpty()) downloaded.add(epLabel)
             }
         }
