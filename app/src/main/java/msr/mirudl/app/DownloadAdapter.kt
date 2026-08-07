@@ -241,7 +241,6 @@ class DownloadAdapter(
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(8)).apply {
                 topMargin = dp(4)
             }
-            progressDrawable = ContextCompat.getDrawable(ctx, R.drawable.progress_bar_download)
         }
 
         layout.addView(titleRow)
@@ -300,7 +299,7 @@ class DownloadAdapter(
         h.status.text = "${fh.entries.size} files"
 
         val count = fh.entries.size
-        h.icon.setImageResource(if (fh.expanded) R.drawable.ic_folder_open else R.drawable.ic_folder)
+        h.icon.setImageResource(R.drawable.ic_folder)
 
         h.card.setOnClickListener {
             toggleFolder(fh.name)
