@@ -236,7 +236,7 @@ rework when they move to `commonMain`:
       touching bigger screens.
 - [x] 6.2 Rewrite `DeveloperActivity` in Compose.
 - [x] 6.3 Rewrite `SettingsActivity` in Compose.
-- [ ] 6.4 Rewrite `DetailActivity`'s episode list (just the list/grid of
+- [x] 6.4 Rewrite `DetailActivity`'s episode list (just the list/grid of
       episodes) in Compose, reusing `EpisodeAdapter`'s logic as a
       `LazyColumn`/`LazyVerticalGrid`.
 - [ ] 6.5 Rewrite the rest of `DetailActivity` (search row, select-mode
@@ -309,6 +309,7 @@ rework when they move to `commonMain`:
 ---
 ### Progress log
 
+- **2026-08-07** Step 6.4 ✅ — DetailActivity episode list → Compose (LazyColumn/LazyVerticalGrid). CI pending.
 - **2026-08-07** Step 6.3 ✅ — SettingsActivity → Compose. Deleted activity_settings.xml. CI pending.
 - **2026-08-07** Step 6.2 ✅ — DeveloperActivity → Compose. Deleted activity_developer.xml. CI pending.
 - **2026-08-07** Step 6.1 ✅ — AboutActivity → Compose. Deleted activity_about.xml. CI pending.

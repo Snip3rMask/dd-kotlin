@@ -521,7 +521,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 6.1 AboutActivity → Compose (smallest, proof-of-concept)
 - [x] 6.2 DeveloperActivity → Compose
 - [x] 6.3 SettingsActivity → Compose
-- [ ] 6.4 DetailActivity episode list → Compose (LazyColumn/LazyVerticalGrid)
+- [x] 6.4 DetailActivity episode list → Compose (LazyColumn/LazyVerticalGrid)
 - [ ] 6.5 DetailActivity rest → Compose + delete item_episode*.xml + EpisodeAdapter.kt + activity_detail.xml
 - [ ] 6.6 MainActivity Home tab → Compose + delete item_anime*.xml + AnimeAdapter.kt + AnimeGridAdapter.kt
 - [ ] 6.7 MainActivity Downloads tab → Compose + delete DownloadAdapter.kt + DownloadEntry.java

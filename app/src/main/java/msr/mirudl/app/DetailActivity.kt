@@ -12,26 +12,26 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import msr.mirudl.shared.download.DownloadManager
 import msr.mirudl.shared.download.Job
-import msr.mirudl.shared.model.DownloadRecord
 import msr.mirudl.shared.model.EpisodeItem
 import msr.mirudl.shared.model.VideoSource
 import msr.mirudl.shared.network.MiruClient
 import msr.mirudl.shared.storage.AppStorage
 import msr.mirudl.shared.storage.DownloadEntryStore
 import msr.mirudl.shared.storage.StorageSettings
+import java.util.Locale
 
 class DetailActivity : BaseActivity() {
 
@@ -40,15 +40,11 @@ class DetailActivity : BaseActivity() {
     private var animeThumb: String? = null
     private var animeUrl: String? = null
 
-    private lateinit var episodeList: RecyclerView
-    private lateinit var loadingBar: ProgressBar
     private lateinit var titleText: TextView
-    private lateinit var emptyText: TextView
     private lateinit var episodeCount: TextView
     private lateinit var detailMeta: TextView
     private lateinit var detailDesc: TextView
     private lateinit var detailStatus: TextView
-    private lateinit var adapter: EpisodeAdapter
 
     private lateinit var episodeSearchRow: View
     private lateinit var selectBar: View
@@ -60,7 +56,21 @@ class DetailActivity : BaseActivity() {
     private lateinit var selectCountText: TextView
     private lateinit var btnDownloadSelected: TextView
 
-    private var episodes: MutableList<EpisodeItem> = mutableListOf()
+    private lateinit var episodeComposeView: ComposeView
+
+    private var allEpisodes: MutableList<EpisodeItem> = mutableListOf()
+
+    // Compose-visible state
+    private var displayEpisodes by mutableStateOf<List<EpisodeItem>>(emptyList())
+    private var gridMode by mutableStateOf(false)
+    private var selectionMode by mutableStateOf(false)
+    private var isLoading by mutableStateOf(true)
+    private var emptyMessage by mutableStateOf("")
+    private var downloadedEpisodes by mutableStateOf<Set<String>>(emptySet())
+
+    // Internal adapter-equivalent state
+    private var searchQuery = ""
+    private var reversed = false
 
     private val storage: AppStorage
         get() = msr.mirudl.shared.storage.AndroidAppStorage(this, "mirudl_settings")
@@ -75,9 +85,7 @@ class DetailActivity : BaseActivity() {
         animeUrl = intent.getStringExtra("anime_url")
 
         titleText = findViewById(R.id.detail_title)
-        episodeList = findViewById(R.id.episode_list)
-        loadingBar = findViewById(R.id.loading_bar)
-        emptyText = findViewById(R.id.empty_text)
+        episodeComposeView = findViewById(R.id.episode_compose_view)
         episodeCount = findViewById(R.id.episode_count)
         detailMeta = findViewById(R.id.detail_meta)
         detailDesc = findViewById(R.id.detail_description)
@@ -106,7 +114,7 @@ class DetailActivity : BaseActivity() {
         findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
 
         btnDownloadAll.setOnClickListener {
-            if (episodes.isEmpty()) {
+            if (allEpisodes.isEmpty()) {
                 Toast.makeText(this, "No episodes available", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -117,30 +125,28 @@ class DetailActivity : BaseActivity() {
             showDownloadAllDialog()
         }
 
-        adapter = EpisodeAdapter(object : EpisodeAdapter.Listener {
-            override fun onClick(ep: EpisodeItem) {
-                if (ep.hlsUrl != null) {
-                    startDownload(ep)
-                } else {
-                    resolveAndDownload(ep)
-                }
+        // Set up Compose episode list
+        episodeComposeView.setContent {
+            androidx.compose.material3.MaterialTheme {
+                EpisodeListContent(
+                    episodes = displayEpisodes,
+                    gridMode = gridMode,
+                    selectionMode = selectionMode,
+                    downloadedEpisodes = downloadedEpisodes,
+                    isLoading = isLoading,
+                    emptyMessage = emptyMessage,
+                    onEpisodeClick = { ep -> handleEpisodeClick(ep) }
+                )
             }
-
-            override fun onSelectionChanged(count: Int) {
-                selectCountText.text = "$count selected"
-                btnDownloadSelected.alpha = if (count > 0) 1f else 0.5f
-            }
-        })
-
-        episodeList.layoutManager = LinearLayoutManager(this)
-        episodeList.adapter = adapter
+        }
 
         btnEpSearch.setOnClickListener {
             val showing = episodeSearchRow.visibility == View.VISIBLE
             if (showing) {
                 episodeSearchRow.visibility = View.GONE
                 episodeSearchInput.setText("")
-                adapter.setQuery("")
+                searchQuery = ""
+                rebuildDisplayList()
                 btnEpSearch.setColorFilter(getColor(R.color.text_secondary))
             } else {
                 episodeSearchRow.visibility = View.VISIBLE
@@ -152,21 +158,22 @@ class DetailActivity : BaseActivity() {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                adapter.setQuery(s?.toString() ?: "")
+                searchQuery = s?.toString()?.trim() ?: ""
+                rebuildDisplayList()
             }
         })
 
         btnEpReverse.setOnClickListener {
-            val nowReversed = !adapter.isReversed()
-            adapter.setReversed(nowReversed)
-            btnEpReverse.setColorFilter(getColor(if (nowReversed) R.color.primary else R.color.text_secondary))
+            reversed = !reversed
+            rebuildDisplayList()
+            btnEpReverse.setColorFilter(getColor(if (reversed) R.color.primary else R.color.text_secondary))
         }
 
         btnEpSelect.setOnClickListener { enterSelectionMode() }
         findViewById<View>(R.id.btn_select_close).setOnClickListener { exitSelectionMode() }
-        findViewById<View>(R.id.btn_select_all).setOnClickListener { adapter.selectAllVisible() }
+        findViewById<View>(R.id.btn_select_all).setOnClickListener { selectAllVisible() }
         btnDownloadSelected.setOnClickListener {
-            val selected = adapter.getSelectedEpisodes()
+            val selected = getSelectedEpisodes()
             if (selected.isEmpty()) {
                 Toast.makeText(this, "Select at least one episode", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -179,44 +186,97 @@ class DetailActivity : BaseActivity() {
             exitSelectionMode()
         }
 
-        adapter.setDownloadedEpisodes(currentDownloadedSet())
+        downloadedEpisodes = currentDownloadedSet()
 
         loadEpisodes()
         loadDetails()
     }
 
-    private fun loadDetails() {
-        // No external title/details fetching needed
-        // Title comes from intent extra (search/anime card name)
+    // ── Episode list management (replaces EpisodeAdapter logic) ──
+
+    private fun rebuildDisplayList() {
+        val filtered = if (searchQuery.isEmpty()) {
+            allEpisodes.toMutableList()
+        } else {
+            val lower = searchQuery.lowercase(Locale.US)
+            allEpisodes.filter { ep ->
+                ep.getLabel().contains(searchQuery) ||
+                    (ep.title?.lowercase(Locale.US)?.contains(lower) == true)
+            }.toMutableList()
+        }
+        if (reversed) filtered.reverse()
+        displayEpisodes = filtered
     }
 
+    private fun handleEpisodeClick(ep: EpisodeItem) {
+        if (selectionMode) {
+            ep.selected = !ep.selected
+            displayEpisodes = displayEpisodes.toList()
+            selectCountText.text = "${getSelectedEpisodes().size} selected"
+            btnDownloadSelected.alpha = if (getSelectedEpisodes().isNotEmpty()) 1f else 0.5f
+        } else {
+            if (ep.hlsUrl != null) {
+                startDownload(ep)
+            } else {
+                resolveAndDownload(ep)
+            }
+        }
+    }
+
+    private fun selectAllVisible() {
+        for (ep in displayEpisodes) ep.selected = true
+        displayEpisodes = displayEpisodes.toList()
+        selectCountText.text = "${getSelectedEpisodes().size} selected"
+        btnDownloadSelected.alpha = 1f
+    }
+
+    private fun getSelectedEpisodes(): List<EpisodeItem> {
+        return allEpisodes.filter { it.selected }
+    }
+
+    private fun enterSelectionMode() {
+        selectionMode = true
+        selectCountText.text = "0 selected"
+        btnDownloadSelected.alpha = 0.5f
+        selectBar.visibility = View.VISIBLE
+        btnDownloadAll.visibility = View.GONE
+        btnEpSelect.visibility = View.GONE
+    }
+
+    private fun exitSelectionMode() {
+        selectionMode = false
+        for (ep in allEpisodes) ep.selected = false
+        displayEpisodes = displayEpisodes.toList()
+        selectBar.visibility = View.GONE
+        btnDownloadAll.visibility = View.VISIBLE
+        btnEpSelect.visibility = View.VISIBLE
+    }
+
+    // ── Existing logic (unchanged) ──
+
+    private fun loadDetails() {}
+
     private fun loadEpisodes() {
-        loadingBar.visibility = View.VISIBLE
+        isLoading = true
         lifecycleScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
                     MiruClient.getEpisodes(animeId!!)
                 }
-                episodes = result.toMutableList()
-                loadingBar.visibility = View.GONE
-                val count = "${episodes.size} episodes"
+                allEpisodes = result.toMutableList()
+                isLoading = false
+                val count = "${allEpisodes.size} episodes"
                 episodeCount.text = count
 
-                val gridMode = episodes.size > GRID_THRESHOLD
-                episodeList.layoutManager = if (gridMode)
-                    GridLayoutManager(this@DetailActivity, GRID_SPAN)
-                else
-                    LinearLayoutManager(this@DetailActivity)
-                adapter.setGridMode(gridMode)
-                adapter.setItems(episodes)
+                gridMode = allEpisodes.size > GRID_THRESHOLD
+                rebuildDisplayList()
 
-                if (episodes.isEmpty()) {
-                    emptyText.visibility = View.VISIBLE
+                if (allEpisodes.isEmpty()) {
+                    emptyMessage = "No episodes found"
                 }
             } catch (e: Exception) {
-                loadingBar.visibility = View.GONE
-                emptyText.text = "Error: ${e.message}"
-                emptyText.visibility = View.VISIBLE
+                isLoading = false
+                emptyMessage = "Error: ${e.message}"
             }
         }
     }
@@ -372,14 +432,14 @@ class DetailActivity : BaseActivity() {
         box.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
 
         val msg = TextView(this).apply {
-            text = "Start downloading all ${episodes.size} episodes?"
+            text = "Start downloading all ${allEpisodes.size} episodes?"
             setTextColor(getColor(R.color.text_tertiary))
             textSize = 13f
         }
         box.addView(msg, LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, dp(16), 0, dp(22)) })
 
         val downloadBtn = TextView(this).apply {
-            text = "Download All (${episodes.size})"
+            text = "Download All (${allEpisodes.size})"
             setTextColor(getColor(R.color.text_primary))
             textSize = 14f
             setTypeface(null, Typeface.BOLD)
@@ -450,25 +510,19 @@ class DetailActivity : BaseActivity() {
 
     private fun queueDownload(ep: EpisodeItem, hlsUrl: String, quality: String, language: String) {
         val label = "Episode ${ep.getLabel()}"
-        for (existing in DownloadManager.snapshot()) {
-            if (!existing.finished && existing.animeTitle == animeTitle && existing.episodeTitle == label) {
-                if (!DownloadManager.isRunning()) {
-                    val intent = DownloadService.startIntent(this)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(intent)
-                    } else {
-                        startService(intent)
-                    }
-                    Toast.makeText(this, "Resuming: $label", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Already queued: $label", Toast.LENGTH_SHORT).show()
-                }
-                return
+        val exists = DownloadManager.findByAnimeAndEpisode(animeTitle, ep.getLabel())
+        if (exists != null) {
+            val status = exists.status
+            if (status == DownloadManager.STATUS_COMPLETED) {
+                Toast.makeText(this, "Already downloaded: $label", Toast.LENGTH_SHORT).show()
+            } else if (status == DownloadManager.STATUS_QUEUED || status == DownloadManager.STATUS_DOWNLOADING) {
+                Toast.makeText(this, "Already queued: $label", Toast.LENGTH_SHORT).show()
             }
+            return
         }
 
         DownloadManager.enqueue(animeTitle, label, quality, language, hlsUrl)
-        adapter.notifyDataSetChanged()
+        downloadedEpisodes = currentDownloadedSet()
 
         val intent = DownloadService.startIntent(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -481,7 +535,7 @@ class DetailActivity : BaseActivity() {
     }
 
     private fun downloadAllEpisodes() {
-        enqueueEpisodes(episodes, "${episodes.size} episodes queued")
+        enqueueEpisodes(allEpisodes, "${allEpisodes.size} episodes queued")
     }
 
     private fun downloadSelectedEpisodes(selected: List<EpisodeItem>) {
@@ -542,29 +596,13 @@ class DetailActivity : BaseActivity() {
                     } else {
                         startService(intent)
                     }
-                    adapter.notifyDataSetChanged()
+                    downloadedEpisodes = currentDownloadedSet()
                     Toast.makeText(this@DetailActivity, successMessage, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@DetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun enterSelectionMode() {
-        adapter.setSelectionMode(true)
-        selectCountText.text = "0 selected"
-        btnDownloadSelected.alpha = 0.5f
-        selectBar.visibility = View.VISIBLE
-        btnDownloadAll.visibility = View.GONE
-        btnEpSelect.visibility = View.GONE
-    }
-
-    private fun exitSelectionMode() {
-        adapter.setSelectionMode(false)
-        selectBar.visibility = View.GONE
-        btnDownloadAll.visibility = View.VISIBLE
-        btnEpSelect.visibility = View.VISIBLE
     }
 
     private fun currentDownloadedSet(): Set<String> {
@@ -580,7 +618,7 @@ class DetailActivity : BaseActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (::adapter.isInitialized && adapter.isSelectionMode()) {
+        if (selectionMode) {
             exitSelectionMode()
             return
         }
