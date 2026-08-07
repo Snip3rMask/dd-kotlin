@@ -635,7 +635,7 @@ private fun DeveloperCard(
             )
         }
 
-        Divider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 8.dp))
+        HorizontalDivider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 8.dp))
 
         // GitHub link
         CardRow(

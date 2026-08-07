@@ -3,6 +3,7 @@ package msr.mirudl.app
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -37,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,8 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.Glide
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -371,7 +371,6 @@ class DetailActivity : BaseActivity() {
 
 // ── COMPOSE UI ──
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun DetailScreen(
     title: String, thumbUrl: String?, episodes: List<EpisodeItem>,
@@ -489,15 +488,18 @@ private fun DetailHeader(title: String, onBack: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun AnimeInfoCard(thumbUrl: String, title: String, modifier: Modifier = Modifier) {
     Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = CardBg) {
         Row(modifier = Modifier.padding(16.dp)) {
-            GlideImage(
-                model = thumbUrl, contentDescription = "Thumbnail",
-                modifier = Modifier.size(96.dp, 136.dp).clip(RoundedCornerShape(14.dp)),
-                contentScale = ContentScale.Crop
+            AndroidView(
+                factory = { ctx ->
+                    ImageView(ctx).apply {
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                        Glide.with(ctx).load(thumbUrl).centerCrop().into(this)
+                    }
+                },
+                modifier = Modifier.size(96.dp, 136.dp).clip(RoundedCornerShape(14.dp))
             )
             Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(text = title, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)

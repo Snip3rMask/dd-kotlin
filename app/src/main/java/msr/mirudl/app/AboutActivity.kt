@@ -213,7 +213,7 @@ private fun InfoCard(modifier: Modifier = Modifier) {
             value = "msr.mirudl.app"
         )
 
-        Divider(
+        HorizontalDivider(
             color = DividerColor,
             thickness = 1.dp,
             modifier = Modifier.padding(vertical = 8.dp)
@@ -225,7 +225,7 @@ private fun InfoCard(modifier: Modifier = Modifier) {
             value = "360p / 480p / 720p / 1080p"
         )
 
-        Divider(
+        HorizontalDivider(
             color = DividerColor,
             thickness = 1.dp,
             modifier = Modifier.padding(vertical = 8.dp)

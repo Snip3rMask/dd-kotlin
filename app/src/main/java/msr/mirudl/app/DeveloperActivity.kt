@@ -224,7 +224,7 @@ private fun SocialLinksCard(
             onClick = onGitHub
         )
 
-        Divider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 12.dp))
+        HorizontalDivider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 12.dp))
 
         // Telegram Channel
         SocialRow(
@@ -234,7 +234,7 @@ private fun SocialLinksCard(
             onClick = onTelegramChannel
         )
 
-        Divider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 12.dp))
+        HorizontalDivider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 12.dp))
 
         // Telegram Group
         SocialRow(
@@ -244,7 +244,7 @@ private fun SocialLinksCard(
             onClick = onTelegramGroup
         )
 
-        Divider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 12.dp))
+        HorizontalDivider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 12.dp))
 
         // Reddit
         SocialRow(
