@@ -244,7 +244,7 @@ rework when they move to `commonMain`:
 ^- [x] 6.6 Rewrite `MainActivity`'s Home tab (search + anime grid) in
       Compose.
 - [x] 6.7 Rewrite `MainActivity`'s Downloads tab in Compose.
-- [ ] 6.8 Rewrite `MainActivity`'s Settings tab in Compose — finishes the
+- [x] 6.8 Rewrite `MainActivity`'s Settings tab in Compose — finishes the
       full Views → Compose migration.
 
 ## Phase 7 — Add iOS target (needs a macOS build host — use a GitHub Actions macOS runner)
@@ -607,4 +607,11 @@ rework when they move to `commonMain`:
   (ic_cancel→ic_close, ic_expand_less/more→ic_chevron_down/right).
   DownloadEntry.java kept (still used by SAF delete dialogs). CI push
   pending verification.
+- Phase 6.8 done: rewrote entire MainActivity in full Compose (Settings
+  tab in SettingsComposable.kt, Home/Downloads tabs inline in
+  HomeTabContent/DownloadsTabContent composables). Deleted
+  activity_main.xml, bottom_nav_menu.xml, spinner_value_chevron.xml,
+  item_group_header.xml, item_section_header.xml. Only
+  bottom_sheet_detail.xml remains (used by showAnimeDetail dialog).
+  Phase 6 fully complete.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")

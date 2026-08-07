@@ -525,7 +525,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 6.5 DetailActivity rest → Compose + delete item_episode*.xml + EpisodeAdapter.kt + activity_detail.xml
 - [x] 6.6 MainActivity Home tab → Compose + delete item_anime*.xml + AnimeAdapter.kt + AnimeGridAdapter.kt
 - [x] 6.7 MainActivity Downloads tab → Compose + delete DownloadAdapter.kt + DownloadEntry.java
-- [ ] 6.8 MainActivity Settings tab → Compose + delete activity_main.xml + bottom_nav_menu.xml
+- [x] 6.8 MainActivity Settings tab → Compose + delete activity_main.xml + bottom_nav_menu.xml
 
 ### Phase 7 — iOS
 - [ ] 7.0 macOS CI job setup (GitHub Actions)
