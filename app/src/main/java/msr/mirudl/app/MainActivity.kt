@@ -35,8 +35,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
@@ -85,12 +83,10 @@ class MainActivity : BaseActivity() {
     private var homeEmptyMessage by mutableStateOf("")
 
     // Downloads
-    private lateinit var downloadsList: RecyclerView
-    private lateinit var emptyTextDl: TextView
+    private lateinit var downloadsComposeView: ComposeView
     private lateinit var btnClearFinished: TextView
-    private lateinit var downloadAdapter: DownloadAdapter
-
-    private val selectedDownloadKeys = mutableSetOf<String>()
+    private var downloadsItems by mutableStateOf<List<DownloadsItem>>(emptyList())
+    private val expandedFolders = mutableSetOf<String>()
 
     // Settings
     private lateinit var folderText: TextView
@@ -360,75 +356,91 @@ class MainActivity : BaseActivity() {
     // ============ DOWNLOADS TAB ============
 
     private fun initDownloadsTab() {
-        downloadsList = findViewById(R.id.downloads_list)
-        emptyTextDl = findViewById(R.id.empty_text_dl)
+        downloadsComposeView = findViewById(R.id.downloads_compose_view)
         btnClearFinished = findViewById(R.id.btn_clear_finished)
         btnClearFinished.setOnClickListener { clearFinished() }
 
-        downloadAdapter = DownloadAdapter(this, object : DownloadAdapter.OnActionListener {
-            override fun onCancel(job: msr.mirudl.shared.download.Job) {
-                DownloadManager.cancel(job)
-                val cancelIntent = Intent(this@MainActivity, DownloadService::class.java).apply {
-                    action = "cancel"
-                    putExtra("jobId", job.id)
-                }
-                startService(cancelIntent)
-                refreshDownloads()
+        downloadsComposeView.setContent {
+            androidx.compose.material3.MaterialTheme {
+                DownloadsContent(
+                    items = downloadsItems,
+                    onCancelJob = { job -> cancelDownloadJob(job) },
+                    onOpenFile = { entry -> openDownloadFile(entry) },
+                    onDeleteFile = { entry -> showDeleteDownloadDialog(DownloadEntry.fromRecord(entry)) },
+                    onToggleFolder = { name -> toggleDownloadFolder(name) },
+                    onGroupDeleteRequest = { name -> requestGroupDelete(name) },
+                    onClearFinished = { clearFinished() }
+                )
             }
-
-            override fun onClick(entry: DownloadRecord) {
-                val dlEntry = DownloadEntry.fromRecord(entry)
-                if (dlEntry.uri != null) {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(dlEntry.uri, "video/mp4")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        startActivity(intent)
-                    } catch (_: Exception) {
-                        Toast.makeText(this@MainActivity, "Cannot open file", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-
-            override fun onDelete(entry: DownloadRecord) {
-                showDeleteDownloadDialog(DownloadEntry.fromRecord(entry))
-            }
-
-            override fun onSelectionToggle(entry: DownloadRecord) {
-                val key = DownloadEntry.fromRecord(entry).key()
-                if (selectedDownloadKeys.contains(key)) selectedDownloadKeys.remove(key)
-                else selectedDownloadKeys.add(key)
-                refreshDownloads()
-            }
-
-            override fun isSelected(entry: DownloadRecord): Boolean {
-                return selectedDownloadKeys.contains(DownloadEntry.fromRecord(entry).key())
-            }
-
-            override fun onGroupDeleteRequest(groupName: String) {
-                val all = DownloadEntryStore.all(storage)
-                val groupEntries = all.filter { groupName == it.parentName() }
-                    .map { DownloadEntry.fromRecord(it) }
-                showDeleteMultipleDialog(groupEntries)
-            }
-
-            override fun onGroupDelete(groupName: String) {
-                downloadAdapter.toggleFolder(groupName)
-                refreshDownloads()
-            }
-        })
-
-        downloadsList.layoutManager = LinearLayoutManager(this)
-        downloadsList.adapter = downloadAdapter
+        }
     }
 
     private fun refreshDownloads() {
         val active = DownloadManager.snapshot()
         val completed = DownloadEntryStore.all(storage)
+        val items = mutableListOf<DownloadsItem>()
+
         val hasActive = active.any { !it.finished }
-        emptyTextDl.visibility = if (!hasActive && completed.isEmpty()) View.VISIBLE else View.GONE
-        downloadAdapter.setData(active, completed)
+        if (hasActive) {
+            items.add(DownloadsItem.Section("DOWNLOADING"))
+            active.filter { !it.finished }.forEach { items.add(DownloadsItem.Active(it)) }
+        }
+
+        if (completed.isNotEmpty()) {
+            items.add(DownloadsItem.Section("COMPLETED"))
+            val grouped = linkedMapOf<String, MutableList<DownloadRecord>>()
+            for (e in completed) {
+                grouped.getOrPut(e.parentName()) { mutableListOf() }.add(e)
+            }
+            for ((folderName, folderEntries) in grouped) {
+                val isExpanded = expandedFolders.contains(folderName)
+                items.add(DownloadsItem.Folder(folderName, folderEntries, isExpanded))
+                if (isExpanded) {
+                    folderEntries.forEach { items.add(DownloadsItem.Completed(it)) }
+                }
+            }
+        }
+
+        if (items.isEmpty()) items.add(DownloadsItem.Empty)
+        downloadsItems = items
+    }
+
+    private fun cancelDownloadJob(job: msr.mirudl.shared.download.Job) {
+        DownloadManager.cancel(job)
+        val cancelIntent = Intent(this, DownloadService::class.java).apply {
+            action = "cancel"
+            putExtra("jobId", job.id)
+        }
+        startService(cancelIntent)
+        refreshDownloads()
+    }
+
+    private fun openDownloadFile(entry: DownloadRecord) {
+        val dlEntry = DownloadEntry.fromRecord(entry)
+        if (dlEntry.uri != null) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(dlEntry.uri, "video/mp4")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(intent)
+            } catch (_: Exception) {
+                Toast.makeText(this, "Cannot open file", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun toggleDownloadFolder(name: String) {
+        if (expandedFolders.contains(name)) expandedFolders.remove(name)
+        else expandedFolders.add(name)
+        refreshDownloads()
+    }
+
+    private fun requestGroupDelete(groupName: String) {
+        val all = DownloadEntryStore.all(storage)
+        val groupEntries = all.filter { groupName == it.parentName() }
+            .map { DownloadEntry.fromRecord(it) }
+        showDeleteMultipleDialog(groupEntries)
     }
 
     private fun clearFinished() {
@@ -643,13 +655,11 @@ class MainActivity : BaseActivity() {
         dialog.show()
         deleteBtn.setOnClickListener {
             for (e in entries) e.deleteFileAndRecord(this)
-            selectedDownloadKeys.clear()
             dialog.dismiss()
             refreshDownloads()
         }
         removeBtn.setOnClickListener {
             for (e in entries) e.deleteRecordOnly(this)
-            selectedDownloadKeys.clear()
             dialog.dismiss()
             refreshDownloads()
         }
