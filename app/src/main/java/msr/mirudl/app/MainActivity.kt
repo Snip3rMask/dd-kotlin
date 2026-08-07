@@ -858,7 +858,7 @@ class MainActivity : BaseActivity() {
                 Toast.makeText(this@MainActivity, "Copied to clipboard", Toast.LENGTH_SHORT).show()
             }
         }
-        actionRow.addView(copyBtn, LinearLayout.LayoutParams(0, dp(46), 1).apply { setMargins(0, 0, dp(6), 0) })
+        actionRow.addView(copyBtn, LinearLayout.LayoutParams(0, dp(46), 1f).apply { setMargins(0, 0, dp(6), 0) })
 
         val saveBtn = TextView(this).apply {
             text = "Save"
@@ -869,7 +869,7 @@ class MainActivity : BaseActivity() {
             background = UiHelper.rounded(getColor(R.color.primary), dp(12))
             setOnClickListener { saveCrashReportToDownloads(file, reportText) }
         }
-        actionRow.addView(saveBtn, LinearLayout.LayoutParams(0, dp(46), 1).apply { setMargins(dp(6), 0, 0, 0) })
+        actionRow.addView(saveBtn, LinearLayout.LayoutParams(0, dp(46), 1f).apply { setMargins(dp(6), 0, 0, 0) })
 
         box.addView(actionRow, LinearLayout.LayoutParams(-1, -2))
 
@@ -1194,7 +1194,7 @@ class MainActivity : BaseActivity() {
             gravity = Gravity.CENTER
             background = UiHelper.rounded(getColor(R.color.surface_variant), dp(12))
         }
-        btnRow.addView(laterBtn, LinearLayout.LayoutParams(0, dp(48), 1).apply { setMargins(0, 0, dp(6), 0) })
+        btnRow.addView(laterBtn, LinearLayout.LayoutParams(0, dp(48), 1f).apply { setMargins(0, 0, dp(6), 0) })
 
         val updateBtn = TextView(this).apply {
             text = "Update Now"
@@ -1204,7 +1204,7 @@ class MainActivity : BaseActivity() {
             gravity = Gravity.CENTER
             background = UiHelper.rounded(getColor(R.color.primary), dp(12))
         }
-        btnRow.addView(updateBtn, LinearLayout.LayoutParams(0, dp(48), 1).apply { setMargins(dp(6), 0, 0, 0) })
+        btnRow.addView(updateBtn, LinearLayout.LayoutParams(0, dp(48), 1f).apply { setMargins(dp(6), 0, 0, 0) })
 
         box.addView(btnRow, LinearLayout.LayoutParams(-1, -2))
 
