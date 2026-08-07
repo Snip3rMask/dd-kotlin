@@ -239,7 +239,7 @@ rework when they move to `commonMain`:
 - [x] 6.4 Rewrite `DetailActivity`'s episode list (just the list/grid of
       episodes) in Compose, reusing `EpisodeAdapter`'s logic as a
       `LazyColumn`/`LazyVerticalGrid`.
-- [ ] 6.5 Rewrite the rest of `DetailActivity` (search row, select-mode
+- [x] 6.5 Rewrite the rest of `DetailActivity` (search row, select-mode
       bar, download dialogs) in Compose — finishes `DetailActivity`.
 - [ ] 6.6 Rewrite `MainActivity`'s Home tab (search + anime grid) in
       Compose.
@@ -309,6 +309,7 @@ rework when they move to `commonMain`:
 ---
 ### Progress log
 
+- **2026-08-07** Step 6.5 ✅ — DetailActivity full Compose rewrite. Deleted activity_detail.xml, item_episode*.xml, EpisodeAdapter.kt. CI pending.
 - **2026-08-07** Step 6.4 ✅ — DetailActivity episode list → Compose (LazyColumn/LazyVerticalGrid). CI pending.
 - **2026-08-07** Step 6.3 ✅ — SettingsActivity → Compose. Deleted activity_settings.xml. CI pending.
 - **2026-08-07** Step 6.2 ✅ — DeveloperActivity → Compose. Deleted activity_developer.xml. CI pending.

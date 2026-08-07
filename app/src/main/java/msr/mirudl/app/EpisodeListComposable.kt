@@ -94,7 +94,7 @@ fun EpisodeListContent(
 }
 
 @Composable
-private fun EpisodeList(
+internal fun EpisodeList(
     episodes: List<EpisodeItem>,
     selectionMode: Boolean,
     downloadedEpisodes: Set<String>,
@@ -202,7 +202,7 @@ private fun EpisodeListItem(
 }
 
 @Composable
-private fun EpisodeGrid(
+internal fun EpisodeGrid(
     episodes: List<EpisodeItem>,
     selectionMode: Boolean,
     downloadedEpisodes: Set<String>,
