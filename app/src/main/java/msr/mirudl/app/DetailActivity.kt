@@ -513,9 +513,9 @@ class DetailActivity : BaseActivity() {
         val exists = DownloadManager.findByAnimeAndEpisode(animeTitle, ep.getLabel())
         if (exists != null) {
             val status = exists.status
-            if (status == DownloadManager.STATUS_COMPLETED) {
+            if (status == Job.STATUS_COMPLETED) {
                 Toast.makeText(this, "Already downloaded: $label", Toast.LENGTH_SHORT).show()
-            } else if (status == DownloadManager.STATUS_QUEUED || status == DownloadManager.STATUS_DOWNLOADING) {
+            } else if (status == Job.STATUS_QUEUED || status == Job.STATUS_DOWNLOADING) {
                 Toast.makeText(this, "Already queued: $label", Toast.LENGTH_SHORT).show()
             }
             return
