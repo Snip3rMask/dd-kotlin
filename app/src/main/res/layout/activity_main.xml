@@ -90,41 +90,10 @@
                 android:layout_height="0dp"
                 android:layout_weight="1">
 
-            <FrameLayout
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/home_compose_view"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <!-- Anime Grid -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/anime_grid"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clipToPadding="false"
-                    android:paddingHorizontal="12dp"
-                    android:paddingBottom="12dp"
-                    android:visibility="visible" />
-
-                <!-- Centered loading spinner -->
-                <ProgressBar
-                    android:id="@+id/loading_bar"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
-                    android:indeterminateTint="@color/primary"
-                    android:visibility="gone" />
-
-                <!-- Centered empty/error text -->
-                <TextView
-                    android:id="@+id/empty_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/no_results"
-                    android:textColor="@color/text_tertiary"
-                    android:textSize="15sp"
-                    android:visibility="gone" />
-
-            </FrameLayout>
+                android:layout_height="match_parent" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

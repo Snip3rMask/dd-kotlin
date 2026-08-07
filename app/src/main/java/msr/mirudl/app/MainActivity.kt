@@ -12,8 +12,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
@@ -25,7 +23,6 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.Spinner
@@ -38,11 +35,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.badge.BadgeDrawable
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -59,6 +54,10 @@ import msr.mirudl.shared.storage.AppStorage
 import msr.mirudl.shared.storage.AndroidAppStorage
 import msr.mirudl.shared.storage.DownloadEntryStore
 import msr.mirudl.shared.storage.StorageSettings
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -79,11 +78,11 @@ class MainActivity : BaseActivity() {
 
     // Home
     private lateinit var searchInput: EditText
-    private lateinit var animeGrid: RecyclerView
-    private lateinit var loadingBar: ProgressBar
-    private lateinit var emptyText: TextView
-    private lateinit var gridAdapter: AnimeGridAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var homeComposeView: ComposeView
+    private var animeList by mutableStateOf<List<AnimeItem>>(emptyList())
+    private var homeLoading by mutableStateOf(true)
+    private var homeEmptyMessage by mutableStateOf("")
 
     // Downloads
     private lateinit var downloadsList: RecyclerView
@@ -232,10 +231,8 @@ class MainActivity : BaseActivity() {
 
     private fun initHomeTab() {
         searchInput = findViewById(R.id.search_input)
-        animeGrid = findViewById(R.id.anime_grid)
-        loadingBar = findViewById(R.id.loading_bar)
-        emptyText = findViewById(R.id.empty_text)
         swipeRefresh = findViewById(R.id.swipe_refresh)
+        homeComposeView = findViewById(R.id.home_compose_view)
         swipeRefresh.setColorSchemeResources(R.color.primary, R.color.primary_dark)
         swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.surface_variant)
         swipeRefresh.setOnRefreshListener {
@@ -243,11 +240,16 @@ class MainActivity : BaseActivity() {
             if (q.isEmpty()) loadPopular() else searchAnime(q)
         }
 
-        gridAdapter = AnimeGridAdapter(object : AnimeGridAdapter.OnAnimeClickListener {
-            override fun onClick(anime: AnimeItem) { showAnimeDetail(anime) }
-        })
-        animeGrid.layoutManager = GridLayoutManager(this, 2)
-        animeGrid.adapter = gridAdapter
+        homeComposeView.setContent {
+            androidx.compose.material3.MaterialTheme {
+                AnimeGridContent(
+                    animeList = animeList,
+                    isLoading = homeLoading,
+                    emptyMessage = homeEmptyMessage,
+                    onAnimeClick = { anime -> showAnimeDetail(anime) }
+                )
+            }
+        }
 
         searchInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -269,45 +271,41 @@ class MainActivity : BaseActivity() {
     }
 
     private fun loadPopular() {
-        loadingBar.visibility = View.VISIBLE
-        emptyText.visibility = View.GONE
+        homeLoading = true
+        homeEmptyMessage = ""
         lifecycleScope.launch {
             try {
                 val results = withContext(Dispatchers.IO) { MiruClient.browseCurrentlyAiring() }
-                loadingBar.visibility = View.GONE
+                homeLoading = false
                 swipeRefresh.isRefreshing = false
-                gridAdapter.setItems(results)
+                animeList = results
                 if (results.isEmpty()) {
-                    emptyText.setText(R.string.no_results)
-                    emptyText.visibility = View.VISIBLE
+                    homeEmptyMessage = getString(R.string.no_results)
                 }
             } catch (e: Exception) {
-                loadingBar.visibility = View.GONE
+                homeLoading = false
                 swipeRefresh.isRefreshing = false
-                emptyText.setText("Error loading")
-                emptyText.visibility = View.VISIBLE
+                homeEmptyMessage = "Error loading"
             }
         }
     }
 
     private fun searchAnime(query: String) {
-        loadingBar.visibility = View.VISIBLE
-        emptyText.visibility = View.GONE
+        homeLoading = true
+        homeEmptyMessage = ""
         lifecycleScope.launch {
             try {
                 val results = withContext(Dispatchers.IO) { MiruClient.search(query) }
-                loadingBar.visibility = View.GONE
+                homeLoading = false
                 swipeRefresh.isRefreshing = false
-                gridAdapter.setItems(results)
+                animeList = results
                 if (results.isEmpty()) {
-                    emptyText.setText(R.string.no_results)
-                    emptyText.visibility = View.VISIBLE
+                    homeEmptyMessage = getString(R.string.no_results)
                 }
             } catch (e: Exception) {
-                loadingBar.visibility = View.GONE
+                homeLoading = false
                 swipeRefresh.isRefreshing = false
-                emptyText.text = "Error: ${e.message}"
-                emptyText.visibility = View.VISIBLE
+                homeEmptyMessage = "Error: ${e.message}"
             }
         }
     }
