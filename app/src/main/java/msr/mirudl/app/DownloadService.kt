@@ -118,7 +118,7 @@ class DownloadService : Service() {
             var lastNotifTime = 0L
             val output = withContext(Dispatchers.IO) {
                 HlsDownloader.download(
-                    playlistUrl = playUrl,
+                    playlistUrl = playUrl ?: throw IllegalStateException("No HLS URL available"),
                     fileName = "${job.animeTitle} - ${job.episodeTitle}",
                     parallelSegments = StorageSettings.getParallelSegments(settingsStorage()),
                     downloadTreeUri = StorageSettings.getDownloadUri(settingsStorage()),
@@ -142,7 +142,7 @@ class DownloadService : Service() {
                             job.bytesPerSecond = bytesPerSecond
                         }
                     },
-                    cancel = HlsDownloader.CancelCheck { job.cancelled }
+                    cancel = object : HlsDownloader.CancelCheck { override fun isCancelled() = job.cancelled }
                 )
             }
 
@@ -223,7 +223,7 @@ class DownloadService : Service() {
                 try { stopSelf() } catch (_: Exception) {}
             }
         } else {
-            val job = DownloadManager.find(jobId)
+            val job = DownloadManager.find(jobId ?: return)
             if (job != null) {
                 DownloadManager.cancel(job)
                 pushNotif(buildNotif(job, "Cancelled", 0, true))
