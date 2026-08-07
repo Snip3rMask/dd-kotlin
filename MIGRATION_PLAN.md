@@ -223,7 +223,7 @@ rework when they move to `commonMain`:
 - [x] 5.10 `DeveloperActivity.java` → Kotlin.
 - [x] 5.11 `SettingsActivity.java` → Kotlin, now calling `shared`'s
       `StorageSettings` instead of its own copy.
-- [ ] 5.12 `DetailActivity.java` → Kotlin, now calling `shared`'s
+- [x] 5.12 `DetailActivity.java` → Kotlin, now calling `shared`'s
       `MiruClient`/`DownloadManager` instead of its own copies.
 - [ ] 5.13 `MainActivity.java` → Kotlin (biggest file, last in this phase),
       now calling `shared` for all business logic.
@@ -308,6 +308,7 @@ rework when they move to `commonMain`:
 ---
 ### Progress log
 
+- **2026-08-07** Step 5.12 ✅ — `DetailActivity.java` → Kotlin. CI green (run 31146959981, commit cc3dba9).
 - **2026-08-07** Step 5.11 ✅ — `SettingsActivity.java` → Kotlin. CI green (run 31145417525, commit a23f957).
 - **2026-08-07** Step 5.10 ✅ — `DeveloperActivity.java` → Kotlin. CI green (run 31144876543, commit 7be79e0).
 - **2026-08-07** Step 5.9 ✅ — `AboutActivity.java` → Kotlin. CI green (run 31144487916, commit 02504b0).

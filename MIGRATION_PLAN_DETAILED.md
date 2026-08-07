@@ -350,7 +350,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 5.9 `AboutActivity.java` → Kotlin. ✅ (CI green run 31144487916)
 - [x] 5.10 `DeveloperActivity.java` → Kotlin. ✅ (CI green run 31144876543)
 - [x] 5.11 `SettingsActivity.java` → Kotlin (uses shared `StorageSettings`). ✅ (CI green run 31145417525)
-- [ ] 5.12 `DetailActivity.java` → Kotlin (603 lines, complex UI).
+- [x] 5.12 `DetailActivity.java` → Kotlin (603 lines, complex UI). ✅
   - **5.12a** Convert: Java → Kotlin, preserving all behavior.
     - `ExecutorService` + `Handler` → `lifecycleScope.launch` + `withContext(Dispatchers.IO)`.
     - `DownloadManagerAndroid.xxx()` → shared `DownloadManager.xxx()` (suspend).
@@ -515,7 +515,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 5.9 AboutActivity.java → Kotlin
 - [x] 5.10 DeveloperActivity.java → Kotlin
 - [x] 5.11 SettingsActivity.java → Kotlin
-- [ ] 5.12 DetailActivity.java → Kotlin (sub: 5.12a convert, 5.12b bridge cleanup, 5.12c verify)
+- [x] 5.12 DetailActivity.java → Kotlin (sub: 5.12a convert, 5.12b bridge cleanup, 5.12c verify)
 - [ ] 5.13 MainActivity.java → Kotlin (sub: 5.13a convert, 5.13b delete all bridges, 5.13c verify)
 
 ### Phase 6 — Views → Compose
