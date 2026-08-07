@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentValues
 import android.content.Intent
-import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -13,30 +12,17 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.widget.SeekBar
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -55,7 +41,44 @@ import msr.mirudl.shared.storage.StorageSettings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -66,36 +89,30 @@ import java.util.Locale
 class MainActivity : BaseActivity() {
 
     // Tabs
-    private lateinit var tabHome: View
-    private lateinit var tabDownloads: View
-    private lateinit var tabSettings: View
-    private var currentTab = 0
-    private var suppressTabListener = false
-    private lateinit var bottomNav: BottomNavigationView
-    private var crashCardDot: View? = null
+    private var currentTab by mutableIntStateOf(0)
+    private var crashBadgeVisible by mutableStateOf(false)
 
     // Home
-    private lateinit var searchInput: EditText
-    private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var homeComposeView: ComposeView
+    private var searchQuery by mutableStateOf("")
     private var animeList by mutableStateOf<List<AnimeItem>>(emptyList())
     private var homeLoading by mutableStateOf(true)
     private var homeEmptyMessage by mutableStateOf("")
 
     // Downloads
-    private lateinit var downloadsComposeView: ComposeView
-    private lateinit var btnClearFinished: TextView
     private var downloadsItems by mutableStateOf<List<DownloadsItem>>(emptyList())
     private val expandedFolders = mutableSetOf<String>()
 
     // Settings
-    private lateinit var folderText: TextView
-    private lateinit var parallelBar: SeekBar
-    private lateinit var parallelValue: TextView
-    private lateinit var concurrentBar: SeekBar
-    private lateinit var concurrentValue: TextView
-    private lateinit var qualitySpinner: Spinner
-    private lateinit var langSpinner: Spinner
+    private var folderPathDisplay by mutableStateOf("Not selected")
+    private var isDarkMode by mutableStateOf(false)
+    private var parallelSegments by mutableIntStateOf(1)
+    private var concurrentDownloads by mutableIntStateOf(1)
+    private var preferredQuality by mutableStateOf("1080p")
+    private var preferredLanguage by mutableStateOf("jpn")
+    private var updateStatusText by mutableStateOf("Tap to check for a newer version")
+    private var hasUpdate by mutableStateOf(false)
+    private var isCheckingUpdate by mutableStateOf(false)
+
 
     // Periodic refresh
     private var refreshJob: Job? = null
@@ -143,42 +160,109 @@ class MainActivity : BaseActivity() {
 
     private fun onCreateInternal(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        tabHome = findViewById(R.id.tab_home)
-        tabDownloads = findViewById(R.id.tab_downloads)
-        tabSettings = findViewById(R.id.tab_settings)
-        bottomNav = findViewById(R.id.bottom_nav)
+        // Initialize settings state from storage
+        isDarkMode = StorageSettings.isDarkTheme(storage)
+        parallelSegments = StorageSettings.getParallelSegments(storage)
+        concurrentDownloads = StorageSettings.getConcurrentDownloads(storage)
+        preferredQuality = StorageSettings.getPreferredQuality(storage)
+        preferredLanguage = StorageSettings.getPreferredLanguage(storage)
+        updateFolderDisplay()
+        updateCrashBadgeState()
 
-        val rootLayout = findViewById<View>(R.id.root_layout)
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
-            val navBarBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            bottomNav.setPadding(
-                bottomNav.paddingLeft, bottomNav.paddingTop,
-                bottomNav.paddingRight, navBarBottom
-            )
-            insets
-        }
-        ViewCompat.requestApplyInsets(rootLayout)
+        // Restore tab from saved state
+        currentTab = savedInstanceState?.getInt("current_tab", 0) ?: 0
 
-        bottomNav.setOnItemSelectedListener { item ->
-            if (suppressTabListener) return@setOnItemSelectedListener true
-            when (item.itemId) {
-                R.id.nav_home -> { showTab(0); true }
-                R.id.nav_downloads -> { showTab(1); true }
-                R.id.nav_settings -> { showTab(2); true }
-                else -> false
+        // Load search input state from saved state
+        searchQuery = savedInstanceState?.getString("search_query") ?: ""
+
+        setContent {
+            val currentTabState = remember { mutableIntStateOf(savedInstanceState?.getInt("current_tab", 0) ?: 0) }
+
+            MaterialTheme {
+                val navBarColor = Color(0xFFF8F9FA)
+                val bottomBarBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+                Scaffold(
+                    bottomBar = {
+                        NavigationBar(
+                            containerColor = navBarColor,
+                            modifier = Modifier.padding(bottom = bottomBarBottomPadding)
+                        ) {
+                            NavigationBarItem(
+                                icon = { Icon(painterResource(R.drawable.ic_home), contentDescription = "Home") },
+                                label = { Text("Home") },
+                                selected = currentTabState.intValue == 0,
+                                onClick = {
+                                    if (currentTabState.intValue != 0) {
+                                        currentTabState.intValue = 0
+                                        currentTab = 0
+                                        loadPopular()
+                                    }
+                                }
+                            )
+                            NavigationBarItem(
+                                icon = { Icon(painterResource(R.drawable.ic_download), contentDescription = "Downloads") },
+                                label = { Text("Downloads") },
+                                selected = currentTabState.intValue == 1,
+                                onClick = {
+                                    if (currentTabState.intValue != 1) {
+                                        currentTabState.intValue = 1
+                                        currentTab = 1
+                                        refreshDownloads()
+                                    }
+                                }
+                            )
+                            NavigationBarItem(
+                                icon = {
+                                    BadgedBox(
+                                        badge = {
+                                            if (crashBadgeVisible) {
+                                                Badge(containerColor = Color(0xFFD93025))
+                                            }
+                                        }
+                                    ) {
+                                        Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings")
+                                    }
+                                },
+                                label = { Text("Settings") },
+                                selected = currentTabState.intValue == 2,
+                                onClick = {
+                                    if (currentTabState.intValue != 2) {
+                                        currentTabState.intValue = 2
+                                        currentTab = 2
+                                        updateFolderDisplay()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                ) { padding ->
+                    when (currentTabState.intValue) {
+                        0 -> HomeTabContent(
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { searchQuery = it },
+                            onSearch = { searchAnime(it) },
+                            onAnimeClick = { showAnimeDetail(it) },
+                            animeList = animeList,
+                            isLoading = homeLoading,
+                            emptyMessage = homeEmptyMessage,
+                            modifier = Modifier.padding(padding)
+                        )
+                        1 -> DownloadsTabContent(
+                            modifier = Modifier.padding(padding)
+                        )
+                        2 -> SettingsTabContent(
+                            modifier = Modifier.padding(padding)
+                        )
+                    }
+                }
             }
         }
 
-        findViewById<View>(R.id.toolbar_title).setOnClickListener {
-            startActivity(Intent(this, AboutActivity::class.java))
-        }
-
+        // Initialize home & downloads tabs (wiring only — no XML)
         initHomeTab()
         initDownloadsTab()
-        initSettingsTab()
-        updateCrashBadge()
 
         // Silent update check
         lifecycleScope.launch {
@@ -188,82 +272,187 @@ class MainActivity : BaseActivity() {
                     val cached = withContext(Dispatchers.IO) { UpdateChecker.readCache(storage) }
                     val isNew = cached == null || UpdateChecker.isNewerVersion(info.tag, cached.tag)
                     withContext(Dispatchers.Main) {
-                        refreshUpdateSection(if (isNew) info else null)
+                        refreshUpdateSectionState(if (isNew) info else null)
                         if (isNew) showUpdateDialog(info)
                     }
                 } else {
-                    withContext(Dispatchers.Main) { refreshUpdateSection(null) }
+                    withContext(Dispatchers.Main) { refreshUpdateSectionState(null) }
                 }
             } catch (_: Exception) {
-                withContext(Dispatchers.Main) { refreshUpdateSection(null) }
+                withContext(Dispatchers.Main) { refreshUpdateSectionState(null) }
             }
         }
 
-        // Restore tab
-        val restoreTab = savedInstanceState?.getInt("current_tab", 0) ?: 0
-        suppressTabListener = true
-        when (restoreTab) {
-            0 -> bottomNav.selectedItemId = R.id.nav_home
-            1 -> bottomNav.selectedItemId = R.id.nav_downloads
-            2 -> bottomNav.selectedItemId = R.id.nav_settings
+        // Load initial content
+        if (currentTab == 0) loadPopular()
+    }
+
+    // ── Compose tab contents ──
+
+    @Composable
+    private fun HomeTabContent(
+        searchQuery: String,
+        onSearchQueryChange: (String) -> Unit,
+        onSearch: (String) -> Unit,
+        onAnimeClick: (AnimeItem) -> Unit,
+        animeList: List<AnimeItem>,
+        isLoading: Boolean,
+        emptyMessage: String,
+        modifier: Modifier = Modifier
+    ) {
+        Column(modifier = modifier.fillMaxSize()) {
+            // Search bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF8F9FA))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFFFFFFFF))
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(R.drawable.ic_search), contentDescription = null, tint = Color(0xFF80868B), modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = onSearchQueryChange,
+                            textStyle = TextStyle(color = Color(0xFF202124), fontSize = 15.sp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { onSearch(searchQuery) }),
+                            modifier = Modifier.weight(1f),
+                            decorationBox = { innerTextField ->
+                                if (searchQuery.isEmpty()) {
+                                    Text("Search anime...", color = Color(0xFF80868B), fontSize = 15.sp)
+                                }
+                                innerTextField()
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Anime grid
+            AnimeGridContent(
+                animeList = animeList,
+                isLoading = isLoading,
+                emptyMessage = emptyMessage,
+                onAnimeClick = onAnimeClick
+            )
         }
-        suppressTabListener = false
-        showTab(restoreTab)
-        if (restoreTab == 0) loadPopular()
+    }
+
+    @Composable
+    private fun DownloadsTabContent(modifier: Modifier = Modifier) {
+        Column(modifier = modifier.fillMaxSize()) {
+            // Clear finished button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF8F9FA))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "Clear Finished",
+                    color = Color(0xFF0EA5E9),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { clearFinished() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+
+            DownloadsContent(
+                items = downloadsItems,
+                onCancelJob = { cancelDownloadJob(it) },
+                onOpenFile = { openDownloadFile(it) },
+                onDeleteFile = { showDeleteDownloadDialog(DownloadEntry.fromRecord(it)) },
+                onToggleFolder = { toggleDownloadFolder(it) },
+                onGroupDeleteRequest = { requestGroupDelete(it) },
+                onClearFinished = { clearFinished() }
+            )
+        }
+    }
+
+    @Composable
+    private fun SettingsTabContent(modifier: Modifier = Modifier) {
+        Box(modifier = modifier.fillMaxSize()) {
+            SettingsContent(
+                folderPath = folderPathDisplay,
+                isDarkMode = isDarkMode,
+                parallelSegments = parallelSegments,
+                concurrentDownloads = concurrentDownloads,
+                preferredQuality = preferredQuality,
+                preferredLanguage = preferredLanguage,
+                hasNewCrash = crashBadgeVisible,
+                updateStatusText = updateStatusText,
+                hasUpdate = hasUpdate,
+                isCheckingUpdate = isCheckingUpdate,
+                appVersion = try { packageManager.getPackageInfo(packageName, 0).versionName ?: "" } catch (_: Exception) { "" },
+                onSelectFolder = { pickFolder() },
+                onDarkModeChanged = { checked ->
+                    isDarkMode = checked
+                    StorageSettings.setDarkTheme(storage, checked)
+                    recreate()
+                },
+                onParallelChanged = { value ->
+                    parallelSegments = value
+                    StorageSettings.setParallelSegments(storage, value)
+                },
+                onConcurrentChanged = { value ->
+                    concurrentDownloads = value
+                    StorageSettings.setConcurrentDownloads(storage, value)
+                },
+                onQualityChanged = { value ->
+                    preferredQuality = value
+                    StorageSettings.setPreferredQuality(storage, value)
+                },
+                onLanguageChanged = { value ->
+                    preferredLanguage = value
+                    StorageSettings.setPreferredLanguage(storage, value)
+                },
+                onShowCrashLogs = { showCrashLogsDialog() },
+                onCheckUpdates = {
+                    isCheckingUpdate = true
+                    updateStatusText = "Checking for updates\u2026"
+                    lifecycleScope.launch {
+                        try {
+                            val info = withContext(Dispatchers.IO) { UpdateChecker.fetchLatestRelease() }
+                            isCheckingUpdate = false
+                            refreshUpdateSectionState(info)
+                            if (info != null) showUpdateDialog(info)
+                            else Toast.makeText(this@MainActivity, "You are using the latest version", Toast.LENGTH_SHORT).show()
+                        } catch (_: Exception) {
+                            isCheckingUpdate = false
+                            Toast.makeText(this@MainActivity, "Check failed", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onOpenAbout = { startActivity(Intent(this@MainActivity, AboutActivity::class.java)) },
+                onOpenDeveloper = { startActivity(Intent(this@MainActivity, DeveloperActivity::class.java)) },
+                onOpenGithub = {
+                    try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/msrofficial/MiruDL-App"))) }
+                    catch (_: Exception) {}
+                }
+            )
+        }
     }
 
     // ============ TAB SWITCHING ============
 
-    private fun showTab(tab: Int) {
-        currentTab = tab
-        tabHome.visibility = if (tab == 0) View.VISIBLE else View.GONE
-        tabDownloads.visibility = if (tab == 1) View.VISIBLE else View.GONE
-        tabSettings.visibility = if (tab == 2) View.VISIBLE else View.GONE
-        if (tab == 1) refreshDownloads()
-        if (tab == 2) updateFolderDisplay()
-    }
-
     // ============ HOME TAB ============
 
     private fun initHomeTab() {
-        searchInput = findViewById(R.id.search_input)
-        swipeRefresh = findViewById(R.id.swipe_refresh)
-        homeComposeView = findViewById(R.id.home_compose_view)
-        swipeRefresh.setColorSchemeResources(R.color.primary, R.color.primary_dark)
-        swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.surface_variant)
-        swipeRefresh.setOnRefreshListener {
-            val q = searchInput.text.toString().trim()
-            if (q.isEmpty()) loadPopular() else searchAnime(q)
-        }
-
-        homeComposeView.setContent {
-            androidx.compose.material3.MaterialTheme {
-                AnimeGridContent(
-                    animeList = animeList,
-                    isLoading = homeLoading,
-                    emptyMessage = homeEmptyMessage,
-                    onAnimeClick = { anime -> showAnimeDetail(anime) }
-                )
-            }
-        }
-
-        searchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun afterTextChanged(s: Editable?) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s != null) {
-                    if (s.length >= 2) searchAnime(s.toString())
-                    else if (s.isEmpty()) loadPopular()
-                }
-            }
-        })
-
-        searchInput.setOnEditorActionListener { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH && v.text.length >= 2) {
-                searchAnime(v.text.toString())
-                true
-            } else false
-        }
+        // Home tab is now fully managed by Compose in setContent
     }
 
     private fun loadPopular() {
@@ -273,14 +462,12 @@ class MainActivity : BaseActivity() {
             try {
                 val results = withContext(Dispatchers.IO) { MiruClient.browseCurrentlyAiring() }
                 homeLoading = false
-                swipeRefresh.isRefreshing = false
                 animeList = results
                 if (results.isEmpty()) {
                     homeEmptyMessage = getString(R.string.no_results)
                 }
             } catch (e: Exception) {
                 homeLoading = false
-                swipeRefresh.isRefreshing = false
                 homeEmptyMessage = "Error loading"
             }
         }
@@ -293,14 +480,12 @@ class MainActivity : BaseActivity() {
             try {
                 val results = withContext(Dispatchers.IO) { MiruClient.search(query) }
                 homeLoading = false
-                swipeRefresh.isRefreshing = false
                 animeList = results
                 if (results.isEmpty()) {
                     homeEmptyMessage = getString(R.string.no_results)
                 }
             } catch (e: Exception) {
                 homeLoading = false
-                swipeRefresh.isRefreshing = false
                 homeEmptyMessage = "Error: ${e.message}"
             }
         }
@@ -356,23 +541,7 @@ class MainActivity : BaseActivity() {
     // ============ DOWNLOADS TAB ============
 
     private fun initDownloadsTab() {
-        downloadsComposeView = findViewById(R.id.downloads_compose_view)
-        btnClearFinished = findViewById(R.id.btn_clear_finished)
-        btnClearFinished.setOnClickListener { clearFinished() }
-
-        downloadsComposeView.setContent {
-            androidx.compose.material3.MaterialTheme {
-                DownloadsContent(
-                    items = downloadsItems,
-                    onCancelJob = { job -> cancelDownloadJob(job) },
-                    onOpenFile = { entry -> openDownloadFile(entry) },
-                    onDeleteFile = { entry -> showDeleteDownloadDialog(DownloadEntry.fromRecord(entry)) },
-                    onToggleFolder = { name -> toggleDownloadFolder(name) },
-                    onGroupDeleteRequest = { name -> requestGroupDelete(name) },
-                    onClearFinished = { clearFinished() }
-                )
-            }
-        }
+        // Downloads tab is now fully managed by Compose in setContent
     }
 
     private fun refreshDownloads() {
@@ -933,198 +1102,21 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun speedLabel(parallel: Int): String = when {
-        parallel <= 4 -> "Slow"
-        parallel <= 8 -> "Normal"
-        parallel <= 16 -> "Fast"
-        parallel <= 32 -> "Very Fast"
-        else -> "Extreme"
-    }
-
-    private fun updateParallelTint(value: Int) {
-        val color = if (value > 32) ContextCompat.getColor(this, R.color.error)
-        else ContextCompat.getColor(this, R.color.primary)
-        parallelBar.progressDrawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
-        parallelBar.thumb.setColorFilter(color, PorterDuff.Mode.SRC_IN)
-        parallelValue.setTextColor(color)
-    }
-
-    private fun showParallelWarning(value: Int) {
-        AlertDialog.Builder(this)
-            .setTitle("High Speed Warning")
-            .setMessage(
-                "Setting parallel segments to $value may cause:\n\n" +
-                    "\u2022 Rate limiting from the server\n" +
-                    "\u2022 Increased data usage\n" +
-                    "\u2022 Higher battery consumption\n" +
-                    "\u2022 Possible download failures on slow connections\n\n" +
-                    "Use only if you have a stable, high-speed internet connection."
-            )
-            .setPositiveButton("Use Anyway", null)
-            .setNegativeButton("Reduce") { _, _ ->
-                val safe = 32
-                parallelBar.progress = safe
-                parallelValue.text = safe.toString()
-                updateParallelTint(safe)
-                StorageSettings.setParallelSegments(storage, safe)
-            }
-            .show()
-    }
-
-    private fun initSettingsTab() {
-        folderText = findViewById(R.id.folder_path)
-        findViewById<View>(R.id.btn_select_folder).setOnClickListener { pickFolder() }
-
-        parallelBar = findViewById(R.id.parallel_seekbar)
-        parallelValue = findViewById(R.id.parallel_value)
-
-        val currentParallel = StorageSettings.getParallelSegments(storage)
-        parallelBar.progress = currentParallel
-        parallelValue.text = currentParallel.toString()
-        updateParallelTint(currentParallel)
-        parallelBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onStartTrackingTouch(bar: SeekBar) {}
-            override fun onStopTrackingTouch(bar: SeekBar) {
-                val value = bar.progress.coerceAtLeast(1)
-                if (value > 32) showParallelWarning(value)
-            }
-            override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    val value = progress.coerceAtLeast(1)
-                    parallelValue.text = value.toString()
-                    updateParallelTint(value)
-                    StorageSettings.setParallelSegments(storage, value)
-                }
-            }
-        })
-
-        concurrentBar = findViewById(R.id.concurrent_seekbar)
-        concurrentValue = findViewById(R.id.concurrent_value)
-
-        val currentConcurrent = StorageSettings.getConcurrentDownloads(storage)
-        concurrentBar.progress = (currentConcurrent - 1).coerceAtLeast(0)
-        concurrentValue.text = currentConcurrent.toString()
-        concurrentBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onStartTrackingTouch(bar: SeekBar) {}
-            override fun onStopTrackingTouch(bar: SeekBar) {}
-            override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    val value = progress + 1
-                    concurrentValue.text = value.toString()
-                    StorageSettings.setConcurrentDownloads(storage, value)
-                }
-            }
-        })
-
-        qualitySpinner = findViewById(R.id.quality_spinner)
-        val qualities = arrayOf("1080p", "720p", "480p", "360p", "Auto")
-        val qAdapter = ArrayAdapter(this, R.layout.spinner_value_chevron, android.R.id.text1, qualities)
-        qAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        qualitySpinner.adapter = qAdapter
-        val prefQ = StorageSettings.getPreferredQuality(storage)
-        qualities.indexOf(prefQ).takeIf { it >= 0 }?.let { qualitySpinner.setSelection(it) }
-        qualitySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p: AdapterView<*>, v: View, pos: Int, id: Long) {
-                StorageSettings.setPreferredQuality(storage, qualities[pos])
-            }
-            override fun onNothingSelected(p: AdapterView<*>) {}
-        }
-
-        langSpinner = findViewById(R.id.lang_spinner)
-        val langs = arrayOf("jpn", "eng")
-        val langLabels = arrayOf("Sub (Japanese)", "Dub (English)")
-        val lAdapter = ArrayAdapter(this, R.layout.spinner_value_chevron, android.R.id.text1, langLabels)
-        lAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        langSpinner.adapter = lAdapter
-        val prefLang = StorageSettings.getPreferredLanguage(storage)
-        langs.indexOf(prefLang).takeIf { it >= 0 }?.let { langSpinner.setSelection(it) }
-        langSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p: AdapterView<*>, v: View, pos: Int, id: Long) {
-                StorageSettings.setPreferredLanguage(storage, langs[pos])
-            }
-            override fun onNothingSelected(p: AdapterView<*>) {}
-        }
-
-        val themeSwitch = findViewById<SwitchCompat?>(R.id.theme_switch)
-        val themeLabel = findViewById<TextView?>(R.id.theme_label)
-        if (themeSwitch != null && themeLabel != null) {
-            val isDark = StorageSettings.isDarkTheme(storage)
-            themeSwitch.isChecked = isDark
-            themeLabel.setText(if (isDark) R.string.dark_mode_on else R.string.dark_mode_off)
-            themeSwitch.setOnCheckedChangeListener { _, isChecked ->
-                StorageSettings.setDarkTheme(storage, isChecked)
-                recreate()
-            }
-        }
-
-        findViewById<View?>(R.id.about_section)?.setOnClickListener {
-            startActivity(Intent(this, AboutActivity::class.java))
-        }
-
-        val settingsVersionTv = findViewById<TextView?>(R.id.settings_app_version)
-        if (settingsVersionTv != null) {
-            try {
-                val v = packageManager.getPackageInfo(packageName, 0).versionName
-                settingsVersionTv.text = "Version $v"
-            } catch (_: Exception) {}
-        }
-
-        findViewById<View?>(R.id.dev_info_section)?.setOnClickListener {
-            startActivity(Intent(this, DeveloperActivity::class.java))
-        }
-
-        findViewById<View?>(R.id.id_github_link)?.setOnClickListener {
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/msrofficial/MiruDL-App")))
-            } catch (_: Exception) {}
-        }
-
-        val crashBtn = findViewById<View?>(R.id.btn_crash_reports)
-        crashCardDot = findViewById(R.id.crash_card_dot)
-        crashBtn?.setOnClickListener { showCrashLogsDialog() }
-
-        val updateSection = findViewById<View?>(R.id.update_section)
-        val updateProgress = findViewById<View?>(R.id.update_progress)
-        val updateChevron = findViewById<View?>(R.id.update_chevron)
-        if (updateSection != null) {
-            refreshUpdateSection(null)
-            updateSection.setOnClickListener {
-                updateProgress?.visibility = View.VISIBLE
-                updateChevron?.visibility = View.GONE
-                val statusTv = findViewById<TextView?>(R.id.update_status_text)
-                statusTv?.text = "Checking for updates\u2026"
-                lifecycleScope.launch {
-                    try {
-                        val info = withContext(Dispatchers.IO) { UpdateChecker.fetchLatestRelease() }
-                        updateProgress?.visibility = View.GONE
-                        updateChevron?.visibility = View.VISIBLE
-                        refreshUpdateSection(info)
-                        if (info != null) showUpdateDialog(info)
-                        else Toast.makeText(this@MainActivity, "You're using the latest version", Toast.LENGTH_SHORT).show()
-                    } catch (_: Exception) {
-                        updateProgress?.visibility = View.GONE
-                        updateChevron?.visibility = View.VISIBLE
-                        Toast.makeText(this@MainActivity, "Check failed", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-
-        updateFolderDisplay()
-    }
-
-    private fun refreshUpdateSection(info: UpdateChecker.ReleaseInfo?) {
-        val statusTv = findViewById<TextView?>(R.id.update_status_text) ?: return
-        val dot = findViewById<View?>(R.id.update_dot)
+    private fun refreshUpdateSectionState(info: UpdateChecker.ReleaseInfo?) {
         if (info != null) {
-            statusTv.text = "Update available \u2022 ${info.tag}"
-            dot?.visibility = View.VISIBLE
+            updateStatusText = "Update available \u2022 ${info.tag}"
+            hasUpdate = true
+            crashBadgeVisible = CrashLogger.hasNewCrash(this)
         } else {
             var v = ""
             try { v = packageManager.getPackageInfo(packageName, 0).versionName ?: "" } catch (_: Exception) {}
-            statusTv.text = "Version $v \u2022 Up to date"
-            dot?.visibility = View.GONE
+            updateStatusText = "Version $v \u2022 Up to date"
+            hasUpdate = false
         }
+    }
+
+    private fun updateCrashBadgeState() {
+        crashBadgeVisible = CrashLogger.hasNewCrash(this)
     }
 
     private fun showUpdateDialog(info: UpdateChecker.ReleaseInfo) {
@@ -1256,9 +1248,9 @@ class MainActivity : BaseActivity() {
             val uri = Uri.parse(uriStr)
             val path = uri.path
             val display = if (path != null && path.contains(":")) path.substring(path.indexOf(":") + 1) else path
-            folderText.text = display ?: uri.toString()
+            folderPathDisplay = display ?: uri.toString()
         } else {
-            folderText.text = "Not selected"
+            folderPathDisplay = "Not selected"
         }
     }
 
@@ -1291,17 +1283,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun updateCrashBadge() {
-        val hasNew = CrashLogger.hasNewCrash(this)
-        if (::bottomNav.isInitialized) {
-            if (hasNew) {
-                val badge = bottomNav.getOrCreateBadge(R.id.nav_settings)
-                badge.isVisible = true
-                badge.clearNumber()
-            } else {
-                bottomNav.removeBadge(R.id.nav_settings)
-            }
-        }
-        crashCardDot?.visibility = if (hasNew) View.VISIBLE else View.GONE
+        crashBadgeVisible = CrashLogger.hasNewCrash(this)
     }
 
     private fun dp(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
