@@ -517,7 +517,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 5.13 MainActivity.java → Kotlin (sub: 5.13a convert, 5.13b delete all bridges, 5.13c verify)
 
 ### Phase 6 — Views → Compose
-- [ ] 6.0 Compose setup (BOM + activity-compose + Material3 in build.gradle)
+- [x] 6.0 Compose setup (BOM + activity-compose + Material3 in build.gradle)
 - [ ] 6.1 AboutActivity → Compose (smallest, proof-of-concept)
 - [ ] 6.2 DeveloperActivity → Compose
 - [ ] 6.3 SettingsActivity → Compose

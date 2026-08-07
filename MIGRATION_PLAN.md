@@ -230,6 +230,7 @@ rework when they move to `commonMain`:
 
 ## Phase 6 — UI rework: Views → Compose (prerequisite for real UI sharing)
 
+- [x] 6.0 Compose setup: added Compose BOM, activity-compose, Material3, Compose compiler plugin to app/build.gradle. Placeholder ComposeTestActivity added.
 - [ ] 6.1 Rewrite `AboutActivity` (smallest screen) in Jetpack Compose,
       still Android-only, to validate the Compose setup end-to-end before
       touching bigger screens.
@@ -308,6 +309,8 @@ rework when they move to `commonMain`:
 ---
 ### Progress log
 
+- **2026-08-07** Step 6.0 ✅ — Compose setup (BOM + plugin + Material3 + placeholder activity). CI pending.
+- **2026-08-07** Step 5.13 ✅ — `MainActivity.java` → Kotlin. Dead bridges deleted. CI green after fixes (commit 0e83fe3).
 - **2026-08-07** Step 5.12 ✅ — `DetailActivity.java` → Kotlin. CI green (run 31146959981, commit cc3dba9).
 - **2026-08-07** Step 5.11 ✅ — `SettingsActivity.java` → Kotlin. CI green (run 31145417525, commit a23f957).
 - **2026-08-07** Step 5.10 ✅ — `DeveloperActivity.java` → Kotlin. CI green (run 31144876543, commit 7be79e0).
