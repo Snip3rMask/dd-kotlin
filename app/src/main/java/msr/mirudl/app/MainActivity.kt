@@ -243,7 +243,9 @@ class MainActivity : BaseActivity() {
             if (q.isEmpty()) loadPopular() else searchAnime(q)
         }
 
-        gridAdapter = AnimeGridAdapter { anime -> showAnimeDetail(anime) }
+        gridAdapter = AnimeGridAdapter(object : AnimeGridAdapter.OnAnimeClickListener {
+            override fun onClick(anime: AnimeItem) { showAnimeDetail(anime) }
+        })
         animeGrid.layoutManager = GridLayoutManager(this, 2)
         animeGrid.adapter = gridAdapter
 
@@ -688,7 +690,7 @@ class MainActivity : BaseActivity() {
             textSize = 17f
             setTypeface(null, Typeface.BOLD)
         }
-        titleRow.addView(title, LinearLayout.LayoutParams(0, -2, 1).apply { setMargins(dp(12), 0, 0, 0) })
+        titleRow.addView(title, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(dp(12), 0, 0, 0) })
         box.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
 
         if (files.isEmpty()) {
@@ -737,7 +739,7 @@ class MainActivity : BaseActivity() {
                     text = "$dateStr  \u2022  ${if (sizeKb > 0) "$sizeKb KB" else "<1 KB"}"
                     setTextColor(getColor(R.color.text_primary))
                     textSize = 12.5f
-                    layoutParams = LinearLayout.LayoutParams(0, -2, 1)
+                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
                 }
                 row.addView(info)
 
@@ -1157,7 +1159,7 @@ class MainActivity : BaseActivity() {
         }
         titleCol.addView(versionLine, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(2) })
 
-        titleRow.addView(titleCol, LinearLayout.LayoutParams(0, -2, 1).apply { setMargins(dp(12), 0, 0, 0) })
+        titleRow.addView(titleCol, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(dp(12), 0, 0, 0) })
         box.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
 
         val changelogLabel = TextView(this).apply {
