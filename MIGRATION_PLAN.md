@@ -272,7 +272,7 @@ rework when they move to `commonMain`:
 
 - [x] 8.1 Add the `desktopMain` (JVM) source set + target to `:shared`.
       Confirm it builds (no `actual`s yet).
-- [ ] 8.2 Implement the `AppStorage` `actual` for Desktop (Java
+- [x] 8.2 Implement the `AppStorage` `actual` for Desktop (Java
       `Preferences` API or a properties file).
 - [ ] 8.3 Implement the file-output `actual` for Desktop (plain
       `java.io.File` writes, folder picker via a native file dialog).
@@ -619,4 +619,5 @@ rework when they move to `commonMain`:
   imports (clickable, Composable, background, setContent) across
   MainActivity. Final CI green confirmed 2026-08-07.
 - 8.1 done: desktopMain already compiles — CI already runs `:shared:compileKotlinDesktop` and it passed in last green run.
+- 8.2 done: DesktopAppStorage in desktopMain backed by java.util.prefs.Preferences.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")
