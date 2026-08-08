@@ -115,6 +115,7 @@ class SettingsActivity : BaseActivity() {
                                 Uri.parse("https://github.com/msrofficial/MiruDL-App")))
                         } catch (_: Exception) {}
                     }
+                    onDarkModeChanged = { recreate() }
                 )
             }
         }
@@ -141,7 +142,8 @@ private fun SettingsScreen(
     onCrashLogs: () -> Unit,
     onAbout: () -> Unit,
     onDeveloper: () -> Unit,
-    onGitHub: () -> Unit
+    onGitHub: () -> Unit,
+    onDarkModeChanged: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -186,7 +188,7 @@ private fun SettingsScreen(
                     onToggle = {
                         darkMode = it
                         StorageSettingsAndroid.setDarkTheme(context, it)
-                        (context as? Activity)?.recreate()
+                        onDarkModeChanged()
                     },
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
@@ -602,6 +604,7 @@ private fun AboutCard(
 @Composable
 private fun DeveloperCard(
     onGitHub: () -> Unit,
+    onDarkModeChanged: () -> Unit,
     onDeveloper: () -> Unit
 ) {
     CardColumn {

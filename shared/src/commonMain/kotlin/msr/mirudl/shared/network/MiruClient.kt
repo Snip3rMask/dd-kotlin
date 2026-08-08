@@ -213,7 +213,7 @@ object MiruClient {
         val body = get(url)
         val response = json.decodeFromString<EpisodesResponse>(body)
         return response.episodes.map { ep ->
-            EpisodeItem(id = ep.id, number = ep.number, number2 = ep.number2, filler = ep.filler)
+            EpisodeItem(id = ep.id, number = ep.number, number2 = ep.number2 ?: 0, filler = ep.filler)
         }
     }
 
@@ -323,7 +323,7 @@ object MiruClient {
 
     @Serializable
     private data class EpisodeDto(
-        val id: Int = 0, val number: Int = 0, val number2: Int = 0, val filler: Boolean = false
+        val id: Int = 0, val number: Int = 0, val number2: Int? = null, val filler: Boolean = false
     )
 
     @Serializable
