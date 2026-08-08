@@ -270,7 +270,7 @@ rework when they move to `commonMain`:
 
 ## Phase 8 — Add Desktop target (Windows/Linux)
 
-- [ ] 8.1 Add the `desktopMain` (JVM) source set + target to `:shared`.
+- [x] 8.1 Add the `desktopMain` (JVM) source set + target to `:shared`.
       Confirm it builds (no `actual`s yet).
 - [ ] 8.2 Implement the `AppStorage` `actual` for Desktop (Java
       `Preferences` API or a properties file).
@@ -618,4 +618,5 @@ rework when they move to `commonMain`:
   smart-cast for mutable rating in AnimeGridComposable, added missing
   imports (clickable, Composable, background, setContent) across
   MainActivity. Final CI green confirmed 2026-08-07.
+- 8.1 done: desktopMain already compiles — CI already runs `:shared:compileKotlinDesktop` and it passed in last green run.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")

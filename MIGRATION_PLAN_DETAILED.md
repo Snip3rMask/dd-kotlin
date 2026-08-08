@@ -539,7 +539,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [ ] 7.8 macOS CI job verification
 
 ### Phase 8 — Desktop (Windows/Linux)
-- [ ] 8.1 Verify desktopMain compiles (already exists)
+- [x] 8.1 Verify desktopMain compiles (already exists)
 - [ ] 8.2 AppStorage Desktop actual (Java Preferences)
 - [ ] 8.3 FileStorage Desktop actual (java.io.File + folder picker)
 - [ ] 8.4 Verify CIO engine real network call
