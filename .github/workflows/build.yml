@@ -55,7 +55,7 @@ jobs:
           # target. CI had no desktop job before, but :shared now has real
           # desktop code (actuals), so compiling it here keeps both targets
           # verified without a local machine.
-          ./gradlew assembleDebug :shared:compileKotlinDesktop
+          ./gradlew assembleDebug :shared:compileKotlinDesktop :desktopApp:compileKotlin
 
       - name: Collect APKs
         run: |

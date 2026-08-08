@@ -278,7 +278,7 @@ rework when they move to `commonMain`:
       `java.io.File` writes, folder picker via a native file dialog).
 - [x] 8.4 Add the CIO/Java Ktor engine for Desktop and confirm a real
       network call works from a desktop test entry point.
-- [ ] 8.5 Create the `desktopApp` Compose Multiplatform Desktop app shell
+- [x] 8.5 Create the `desktopApp` Compose Multiplatform Desktop app shell
       (placeholder window).
 - [ ] 8.6 Port the Compose screens into `desktopApp`, one at a time, same
       order as Phase 6/7.
@@ -622,4 +622,5 @@ rework when they move to `commonMain`:
 - 8.2 done: DesktopAppStorage in desktopMain backed by java.util.prefs.Preferences.
 - 8.3 done: DesktopFileStorage in desktopMain backed by java.io.File. Cache at ~/.mirudl/cache.
 - 8.4 done: DesktopNetworkCheck.kt entry point verifies CIO engine via MiruClient.search(). Compiles via :shared:compileKotlinDesktop.
+- 8.5 done: desktopApp module created with Compose Desktop shell (Main.kt, 900x600 window, Home/Downloads/Settings tabs). CI compiles :desktopApp:compileKotlin.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")
