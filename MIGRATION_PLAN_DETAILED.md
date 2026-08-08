@@ -450,7 +450,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - 9.2 Home screen with D-pad focus.
 - 9.3 Detail/episode list with D-pad focus.
 - 9.4 Downloads + Settings screens for TV.
-- 9.5 Leanback intent filter, banner asset, TV store listing items.
+- 9.5 Leanback intent filter, banner asset, TV store listing items. ✅
 
 ---
 
@@ -553,7 +553,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 9.2 Home screen with D-pad focus
 - [x] 9.3 Detail/episode list with D-pad focus
 - [x] 9.4 Downloads + Settings screens for TV
-- [ ] 9.5 Leanback intent filter + banner asset
+- [x] 9.5 Leanback intent filter + banner asset
 
 ### Phase 10 — Final polish
 - [ ] 10.1 Confirm zero .java files project-wide
