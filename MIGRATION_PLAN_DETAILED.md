@@ -542,7 +542,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 8.1 Verify desktopMain compiles (already exists)
 - [x] 8.2 AppStorage Desktop actual (Java Preferences)
 - [x] 8.3 FileStorage Desktop actual (java.io.File + folder picker)
-- [ ] 8.4 Verify CIO engine real network call
+- [x] 8.4 Verify CIO engine real network call
 - [ ] 8.5 desktopApp Compose shell
 - [ ] 8.6 Port Compose screens
 - [ ] 8.7 Desktop background download handling

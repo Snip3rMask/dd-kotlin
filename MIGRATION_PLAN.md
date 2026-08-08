@@ -276,7 +276,7 @@ rework when they move to `commonMain`:
       `Preferences` API or a properties file).
 - [x] 8.3 Implement the file-output `actual` for Desktop (plain
       `java.io.File` writes, folder picker via a native file dialog).
-- [ ] 8.4 Add the CIO/Java Ktor engine for Desktop and confirm a real
+- [x] 8.4 Add the CIO/Java Ktor engine for Desktop and confirm a real
       network call works from a desktop test entry point.
 - [ ] 8.5 Create the `desktopApp` Compose Multiplatform Desktop app shell
       (placeholder window).
@@ -621,4 +621,5 @@ rework when they move to `commonMain`:
 - 8.1 done: desktopMain already compiles — CI already runs `:shared:compileKotlinDesktop` and it passed in last green run.
 - 8.2 done: DesktopAppStorage in desktopMain backed by java.util.prefs.Preferences.
 - 8.3 done: DesktopFileStorage in desktopMain backed by java.io.File. Cache at ~/.mirudl/cache.
+- 8.4 done: DesktopNetworkCheck.kt entry point verifies CIO engine via MiruClient.search(). Compiles via :shared:compileKotlinDesktop.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")
