@@ -439,7 +439,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - 8.6 Port Compose screens one at a time.
 - 8.7 Desktop background download handling (thread + tray/in-window
   progress).
-- 8.8 CI: Windows + Linux build jobs.
+- 8.8 CI: Windows + Linux build jobs. ✅
 
 ---
 
@@ -546,7 +546,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 8.5 desktopApp Compose shell
 - [x] 8.6 Port Compose screens
 - [x] 8.7 Desktop background download handling
-- [ ] 8.8 CI: Windows + Linux build jobs
+- [x] 8.8 CI: Windows + Linux build jobs
 
 ### Phase 9 — Android TV
 - [ ] 9.1 tvApp module + placeholder launcher

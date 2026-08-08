@@ -11,7 +11,8 @@ permissions:
   actions: read
 
 jobs:
-  build:
+  # Android APK build (Linux only)
+  android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,8 +21,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -42,20 +43,10 @@ jobs:
             cp -r gradle/wrapper $GITHUB_WORKSPACE/gradle/
             cp gradlew gradlew.bat $GITHUB_WORKSPACE/
           fi
-          # Always ensure gradlew is executable — git doesn't always preserve the
-          # +x bit (e.g. zip re-upload, Windows checkout, etc.), and the block
-          # above only runs when the wrapper jar is missing, so this must live
-          # outside the "if" or a pre-existing wrapper can still ship without
-          # execute permission and fail with "Permission denied" (exit 126).
           chmod +x "$GITHUB_WORKSPACE/gradlew"
 
-      - name: Build debug APK
-        run: |
-          # assembleDebug = Android target; compileKotlinDesktop = JVM desktop
-          # target. CI had no desktop job before, but :shared now has real
-          # desktop code (actuals), so compiling it here keeps both targets
-          # verified without a local machine.
-          ./gradlew assembleDebug :shared:compileKotlinDesktop :desktopApp:compileKotlin
+      - name: Build Android APK
+        run: ./gradlew assembleDebug
 
       - name: Collect APKs
         run: |
@@ -84,9 +75,52 @@ jobs:
         with:
           tag_name: ${{ steps.name.outputs.tag_name }}
           name: ${{ steps.name.outputs.release_name }}
-          body: "Auto-built APKs from commit ${{ github.sha }}"
+          body: Auto-built APKs from commit ${{ github.sha }}
           prerelease: ${{ steps.name.outputs.prerelease }}
           draft: false
           generate_release_notes: true
           overwrite_files: true
           files: artifacts/*.apk
+
+  # Desktop compilation matrix (Linux + Windows)
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.9
+
+      - name: Ensure Gradle Wrapper
+        shell: bash
+        run: |
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            mkdir -p /tmp/wrap-gen
+            cd /tmp/wrap-gen
+            echo "" > settings.gradle
+            echo "" > build.gradle
+            for i in 1 2 3; do
+              gradle wrapper --gradle-version=8.9 && break
+              sleep 5
+            done
+            cp -r gradle/wrapper $GITHUB_WORKSPACE/gradle/
+            cp gradlew gradlew.bat $GITHUB_WORKSPACE/
+          fi
+          chmod +x "$GITHUB_WORKSPACE/gradlew"
+
+      - name: Compile desktop targets
+        shell: bash
+        run: ./gradlew :shared:compileKotlinDesktop :desktopApp:compileKotlin

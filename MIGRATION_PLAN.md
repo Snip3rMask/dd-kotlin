@@ -285,7 +285,7 @@ rework when they move to `commonMain`:
 - [x] 8.7 Desktop-specific background download handling (background
       thread + system tray icon or simple in-window progress — no OS
       foreground-service concept to hook into).
-- [ ] 8.8 CI: add Windows + Linux build jobs.
+- [x] 8.8 CI: add Windows + Linux build jobs.
 
 ## Phase 9 — Android TV
 
