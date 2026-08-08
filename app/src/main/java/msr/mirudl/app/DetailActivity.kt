@@ -177,6 +177,7 @@ class DetailActivity : BaseActivity() {
                     onOpenSettings = {
                         showFolderDialog = false
                         startActivity(Intent(this, SettingsActivity::class.java))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                     },
                     onDismiss = { showFolderDialog = false }
                 )
@@ -237,11 +238,17 @@ class DetailActivity : BaseActivity() {
     }
 
     private fun loadEpisodes() {
+        val id = animeId
+        if (id.isNullOrEmpty()) {
+            isLoading = false
+            emptyMessage = "Invalid anime ID"
+            return
+        }
         isLoading = true
         lifecycleScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    MiruClient.getEpisodes(animeId!!)
+                    MiruClient.getEpisodes(id)
                 }
                 allEpisodes = result.toMutableList()
                 isLoading = false
@@ -249,8 +256,9 @@ class DetailActivity : BaseActivity() {
                 rebuildDisplayList()
                 if (allEpisodes.isEmpty()) emptyMessage = "No episodes found"
             } catch (e: Exception) {
+                android.util.Log.e("DetailActivity", "Failed to load episodes for $id", e)
                 isLoading = false
-                emptyMessage = "Error: ${e.message}"
+                emptyMessage = "Failed to load episodes: ${e.message ?: "Unknown error"}"
             }
         }
     }
@@ -280,7 +288,8 @@ class DetailActivity : BaseActivity() {
                 ep.langName = selected.quality; ep.embedUrl = selected.url
                 startDownload(ep)
             } catch (e: Exception) {
-                Toast.makeText(this@DetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                android.util.Log.e("DetailActivity", "Failed to resolve episode ${ep.id}", e)
+                Toast.makeText(this@DetailActivity, "Error: ${e.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
             }
         }
     }

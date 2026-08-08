@@ -441,8 +441,8 @@ class MainActivity : BaseActivity() {
                         }
                     }
                 },
-                onOpenAbout = { startActivity(Intent(this@MainActivity, AboutActivity::class.java)) },
-                onOpenDeveloper = { startActivity(Intent(this@MainActivity, DeveloperActivity::class.java)) },
+                onOpenAbout = { startActivity(Intent(this@MainActivity, AboutActivity::class.java)); overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) },
+                onOpenDeveloper = { startActivity(Intent(this@MainActivity, DeveloperActivity::class.java)); overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) },
                 onOpenGithub = {
                     try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/msrofficial/MiruDL-App"))) }
                     catch (_: Exception) {}
@@ -540,6 +540,7 @@ class MainActivity : BaseActivity() {
             putExtra("anime_thumb", anime.thumbnail)
         }
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     // ============ DOWNLOADS TAB ============

@@ -122,7 +122,7 @@ fun SettingsContent(
                     icon = R.drawable.ic_sliders,
                     title = "Download Speed",
                     value = parallelSegments.toFloat(),
-                    range = 1f..8f,
+                    range = 1f..64f,
                     displayText = parallelSegments.toString(),
                     onValueChange = { onParallelChanged(it.toInt()) }
                 )

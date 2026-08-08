@@ -12,6 +12,7 @@
         <item name="windowActionModeOverlay">true</item>
         <item name="spinnerStyle">@style/Widget.MiruDL.Spinner</item>
         <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimation.MiruDL</item>
     </style>
 
     <style name="Theme.MiruDL.Splash" parent="Theme.SplashScreen">
@@ -37,5 +38,11 @@
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.08</item>
+    </style>
+    <style name="WindowAnimation.MiruDL" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 </resources>

@@ -1,6 +1,7 @@
 package msr.mirudl.app
 
 import android.content.Intent
+import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -101,11 +102,11 @@ class SettingsActivity : BaseActivity() {
                         } catch (_: Exception) {}
                     },
                     onAbout = {
-                        try { startActivity(Intent(this, AboutActivity::class.java)) }
+                        try { startActivity(Intent(this, AboutActivity::class.java)); overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) }
                         catch (_: Exception) {}
                     },
                     onDeveloper = {
-                        try { startActivity(Intent(this, DeveloperActivity::class.java)) }
+                        try { startActivity(Intent(this, DeveloperActivity::class.java)); overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) }
                         catch (_: Exception) {}
                     },
                     onGitHub = {
@@ -185,6 +186,7 @@ private fun SettingsScreen(
                     onToggle = {
                         darkMode = it
                         StorageSettingsAndroid.setDarkTheme(context, it)
+                        (context as? Activity)?.recreate()
                     },
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
