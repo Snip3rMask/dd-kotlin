@@ -21,10 +21,9 @@ kotlin {
                 implementation("io.ktor:ktor-client-core:3.5.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
                 // Compose Multiplatform (shared UI screens)
-                implementation(platform("org.jetbrains.compose:compose-bom:1.7.1"))
-                implementation("org.jetbrains.compose.material3:material3")
-                implementation("org.jetbrains.compose.foundation:foundation")
-                implementation("org.jetbrains.compose.runtime:runtime")
+                implementation("org.jetbrains.compose.material3:material3:1.7.1")
+                implementation("org.jetbrains.compose.foundation:foundation:1.7.1")
+                implementation("org.jetbrains.compose.runtime:runtime:1.7.1")
             }
         }
         val commonTest by getting {
