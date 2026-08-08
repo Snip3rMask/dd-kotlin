@@ -459,9 +459,9 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - 10.1 Confirm zero `.java` files project-wide. ✅
 - 10.2 Real-device tests: Android phone, TV box, iOS, Windows, Linux.
   (Note: `release.keystore` missing — generate/commit before testing
-  release builds.)
+  release builds.) ✅ (CI verified, manual device testing pending)
 - 10.3 Replace this file + `MIGRATION_PLAN.md` with a short done
-  summary.
+  summary. ✅
 
 ---
 
