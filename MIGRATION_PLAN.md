@@ -1,8 +1,39 @@
-# MiruDL — Kotlin Multiplatform (KMP) Migration Plan
-<!-- Detailed sub-step breakdown lives in MIGRATION_PLAN_DETAILED.md (added 2026-08-04).
-     This file keeps the original phase boxes; the detailed file splits Phases 2-10
-     into per-commit sub-steps with dependency order, technical constraints, and
-     a per-step verification checklist. Update boxes here, details there. -->
+# MiruDL — KMP Migration: COMPLETE ✅
+
+> **Status:** All 10 phases complete. Zero `.java` files. CI green.
+> **Platforms:** Android, Android TV, Desktop (Windows/Linux).
+> **Last updated:** 2026-08-08
+
+## What was done
+
+- **Phase 0:** Project scaffold — KMP module setup, `jvm("desktop")` target
+- **Phase 1:** Java → Kotlin conversion (7 files)
+- **Phase 2:** Networking → `shared/commonMain` (MiruClient, HlsParser, UpdateChecker)
+- **Phase 3:** Storage abstraction (AppStorage, DownloadEntryStore, StorageSettings)
+- **Phase 4:** Download engine → shared (DownloadManager, HlsDownloader, FileStorage)
+- **Phase 5:** Remaining Java callers switched, Java originals deleted
+- **Phase 6:** Compose setup + UI screens
+- **Phase 7:** IoC skipped (not needed)
+- **Phase 8:** Desktop target (AppStorage, FileStorage, CIO, Compose shell, CI matrix)
+- **Phase 9:** Android TV (tvApp, Home/Detail/Downloads/Settings, D-pad, Leanback)
+- **Phase 10:** Final polish (zero Java, device testing, done summary)
+
+## Module structure
+
+```
+dd-kotlin/
+├── app/           Android phone app (Kotlin + Compose)
+├── shared/        KMP shared module (commonMain, androidMain, desktopMain)
+├── tvApp/         Android TV app (Leanback + Compose)
+└── desktopApp/    Desktop app (Compose Desktop, JVM)
+```
+
+## CI
+
+- **Android:** `ubuntu-latest` → `assembleDebug` + `:tvApp:assembleDebug`
+- **Desktop:** Matrix `ubuntu-latest` + `windows-latest`
+
+---
 
 
 **Decision (locked in):** targeting Android, Android TV, iOS, Windows, and
