@@ -456,7 +456,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 
 ## Phase 10 — Final polish
 
-- 10.1 Confirm zero `.java` files project-wide.
+- 10.1 Confirm zero `.java` files project-wide. ✅
 - 10.2 Real-device tests: Android phone, TV box, iOS, Windows, Linux.
   (Note: `release.keystore` missing — generate/commit before testing
   release builds.)
