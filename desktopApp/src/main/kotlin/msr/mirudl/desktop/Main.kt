@@ -4,10 +4,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import msr.mirudl.shared.model.AnimeItem
+import msr.mirudl.shared.ui.*
 
 fun main() = application {
     val state = rememberWindowState(width = 900.dp, height = 600.dp)
@@ -47,21 +51,35 @@ fun DesktopApp() {
 
 @Composable
 fun HomeScreen() {
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Home — search and browse anime")
-    }
+    SharedAnimeGridContent(
+        animeList = emptyList(),
+        isLoading = false,
+        emptyMessage = "Search anime to get started",
+        onAnimeClick = { }
+    )
 }
 
 @Composable
 fun DownloadsScreen() {
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Downloads — active and completed downloads")
-    }
+    SharedDownloadsContent(
+        items = listOf(DownloadsItem.Empty),
+        onCancelJob = { },
+        onOpenFile = { },
+        onDeleteFile = { },
+        onToggleFolder = { },
+        onGroupDeleteRequest = { },
+        onClearFinished = { },
+        folderIcon = ColorPainter(Color.Gray),
+        closeIcon = ColorPainter(Color.Red),
+        deleteIcon = ColorPainter(Color.Gray),
+        chevronDownIcon = ColorPainter(Color.DarkGray),
+        chevronRightIcon = ColorPainter(Color.LightGray)
+    )
 }
 
 @Composable
 fun SettingsScreen() {
     Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Settings — app preferences")
+        Text("Settings — desktop preferences")
     }
 }

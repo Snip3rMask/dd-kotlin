@@ -18,18 +18,13 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                // Multiplatform HTTP client core — engine-agnostic on purpose.
-                // Real engines (OkHttp for Android, CIO for Desktop, Darwin for
-                // iOS later) get added when networking code actually moves
-                // here in Phase 2. This step just proves the dependency
-                // resolves for every target we have configured so far.
                 implementation("io.ktor:ktor-client-core:3.5.1")
-
-                // JSON (kotlinx-serialization). Version 1.10.0 pinned deliberately:
-                // it is compiled with Kotlin 2.3.0, so our Kotlin 2.3.10 compiler
-                // reads its metadata cleanly. 1.11.0 is built with Kotlin 2.3.20
-                // (newer than ours) — upgrade together with the Kotlin bump later.
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+                // Compose Multiplatform (shared UI screens)
+                implementation(platform("org.jetbrains.compose:compose-bom:1.7.1"))
+                implementation("org.jetbrains.compose.material3:material3")
+                implementation("org.jetbrains.compose.foundation:foundation")
+                implementation("org.jetbrains.compose.runtime:runtime")
             }
         }
         val commonTest by getting {
