@@ -274,7 +274,7 @@ rework when they move to `commonMain`:
       Confirm it builds (no `actual`s yet).
 - [x] 8.2 Implement the `AppStorage` `actual` for Desktop (Java
       `Preferences` API or a properties file).
-- [ ] 8.3 Implement the file-output `actual` for Desktop (plain
+- [x] 8.3 Implement the file-output `actual` for Desktop (plain
       `java.io.File` writes, folder picker via a native file dialog).
 - [ ] 8.4 Add the CIO/Java Ktor engine for Desktop and confirm a real
       network call works from a desktop test entry point.
@@ -620,4 +620,5 @@ rework when they move to `commonMain`:
   MainActivity. Final CI green confirmed 2026-08-07.
 - 8.1 done: desktopMain already compiles — CI already runs `:shared:compileKotlinDesktop` and it passed in last green run.
 - 8.2 done: DesktopAppStorage in desktopMain backed by java.util.prefs.Preferences.
+- 8.3 done: DesktopFileStorage in desktopMain backed by java.io.File. Cache at ~/.mirudl/cache.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")
