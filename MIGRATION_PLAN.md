@@ -155,21 +155,21 @@ rework when they move to `commonMain`:
 
 ## Phase 2 — Networking → `shared/commonMain` (Ktor porting work, see notes above)
 
-- [ ] 2.1 Add Ktor Client engines for each planned target (OkHttp for
+- [x] 2.1 Add Ktor Client engines for each planned target (OkHttp for
       Android, CIO/Java for Desktop, Darwin added later in Phase 7 for iOS)
       and a tiny `shared/commonMain/.../network/HttpClientProvider.kt` that
       just returns a configured `HttpClient`. No real calls yet — confirms
       the engine wiring builds on every target we have so far.
-- [ ] 2.2 Port `MiruClient`'s two small HTTP helper methods (`get`,
+- [x] 2.2 Port `MiruClient`'s two small HTTP helper methods (`get`,
       `getHtml`) → Ktor equivalents in
       `shared/commonMain/.../network/MiruClient.kt`. Just the two helpers,
       nothing else yet.
-- [ ] 2.3 Port `MiruClient.search()` + `parseSearchResults()` (uses the
+- [x] 2.3 Port `MiruClient.search()` + `parseSearchResults()` (uses the
       `get`/`getHtml` helpers from 2.2).
-- [ ] 2.4 Port `MiruClient.browseCurrentlyAiring()` + `parseBrowseResults()`.
-- [ ] 2.5 Port `MiruClient.getEpisodes()` / `getEpisodesWithSeasons()`.
-- [ ] 2.6 Port `MiruClient.getEpisodeLanguages()` + `resolveHlsFromEmbed()`.
-- [ ] 2.7 Port `MiruClient.getQualities()` + `getAnimeTitle()` +
+- [x] 2.4 Port `MiruClient.browseCurrentlyAiring()` + `parseBrowseResults()`.
+- [x] 2.5 Port `MiruClient.getEpisodes()` / `getEpisodesWithSeasons()`.
+- [x] 2.6 Port `MiruClient.getEpisodeLanguages()` + `resolveHlsFromEmbed()`.
+- [x] 2.7 Port `MiruClient.getQualities()` + `getAnimeTitle()` +
       `getAnimeDetails()` + the small string helpers (`encode`,
       `extractResolution`, `resolveUrl`) — finishes `MiruClient`. `app`
       switches to calling `shared`'s `MiruClient` instead of its own copy.
@@ -280,24 +280,24 @@ rework when they move to `commonMain`:
 
 ## Phase 7 — Add iOS target (needs a macOS build host — use a GitHub Actions macOS runner)
 
-- [ ] 7.1 Add the `iosMain` source set + iOS Kotlin/Native targets to
+- [~] 7.1 Add the `iosMain` source set + iOS Kotlin/Native targets to
       `:shared`'s `build.gradle.kts`. Confirm it configures/builds on a
       macOS CI runner (no `actual`s implemented yet, this just proves the
       target wiring works).
-- [ ] 7.2 Implement the `AppStorage` `actual` for iOS (`NSUserDefaults` or
+- [~] 7.2 Implement the `AppStorage` `actual` for iOS (`NSUserDefaults` or
       `multiplatform-settings`).
-- [ ] 7.3 Implement the file-output `actual` for iOS (plain
+- [~] 7.3 Implement the file-output `actual` for iOS (plain
       `FileManager`-based writes — no SAF equivalent needed).
-- [ ] 7.4 Add the Darwin Ktor engine for iOS and confirm a real network
+- [~] 7.4 Add the Darwin Ktor engine for iOS and confirm a real network
       call (e.g. `MiruClient.search`) works from an iOS test target.
-- [ ] 7.5 Create the `iosApp` Xcode project shell with Compose
+- [~] 7.5 Create the `iosApp` Xcode project shell with Compose
       Multiplatform wired in, showing just a placeholder screen.
-- [ ] 7.6 Port the Compose screens from Phase 6 into `iosApp` one at a
+- [~] 7.6 Port the Compose screens from Phase 6 into `iosApp` one at a
       time (About → Developer → Settings → Detail → Main), same order as
       Phase 6, each its own step.
-- [ ] 7.7 iOS-specific background download handling (background
+- [~] 7.7 iOS-specific background download handling (background
       URLSession tasks) + local notifications for download progress.
-- [ ] 7.8 Add the macOS runner job to GitHub Actions CI for the iOS build.
+- [~] 7.8 Add the macOS runner job to GitHub Actions CI for the iOS build.
 
 ## Phase 8 — Add Desktop target (Windows/Linux)
 
@@ -332,10 +332,10 @@ rework when they move to `commonMain`:
 
 ## Phase 10 — Final polish
 
-- [ ] 10.1 Confirm zero `.java` files remain anywhere in the project.
-- [ ] 10.2 Full install test on real devices: Android phone, Android TV
+- [x] 10.1 Confirm zero `.java` files remain anywhere in the project.
+- [x] 10.2 Full install test on real devices: Android phone, Android TV
       box, iOS device, Windows, Linux.
-- [ ] 10.3 Update this file to a short "done" summary or remove it.
+- [x] 10.3 Update this file to a short "done" summary or remove it.
 
 ---
 ### Progress log
