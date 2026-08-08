@@ -7,7 +7,7 @@ green after every step. The rule of thumb: **one sub-step = one green
 build; `app` must always compile and run.**
 
 Current state (verified 2026-08-07): Phases 0-5 fully done. `app` has 1 remaining Java file:
-DownloadEntry.java (55 lines, stays until Phase 6.7). 13 XML layouts remain.
+Phase 6 fully complete. 1 XML layout remains (bottom_sheet_detail.xml for showAnimeDetail dialog).
 
 ---
 

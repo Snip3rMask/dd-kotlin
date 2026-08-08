@@ -614,4 +614,8 @@ rework when they move to `commonMain`:
   item_group_header.xml, item_section_header.xml. Only
   bottom_sheet_detail.xml remains (used by showAnimeDetail dialog).
   Phase 6 fully complete.
+- CI fix chain for 6.7-6.8: fixed Long-to-Int in setBackgroundColor,
+  smart-cast for mutable rating in AnimeGridComposable, added missing
+  imports (clickable, Composable, background, setContent) across
+  MainActivity. Final CI green confirmed 2026-08-07.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")
