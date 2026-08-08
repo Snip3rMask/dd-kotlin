@@ -16,7 +16,7 @@ class DownloadEntry private constructor(
 ) {
     fun parentName(): String = record.parentName()
 
-    fun key(): String = record.key()
+    fun key(): String? = record.key()
 
     fun deleteRecordOnly(context: Context) {
         DownloadEntryStoreAndroid.remove(context, record)
