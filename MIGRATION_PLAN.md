@@ -289,7 +289,7 @@ rework when they move to `commonMain`:
 
 ## Phase 9 — Android TV
 
-- [ ] 9.1 Create the `tvApp` module (or a TV product flavor of `app`),
+- [x] 9.1 Create the `tvApp` module (or a TV product flavor of `app`),
       depending on `:shared`, with just a placeholder launcher screen.
 - [ ] 9.2 Port the Home screen to a TV-friendly Compose layout with D-pad
       focus handling.

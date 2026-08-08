@@ -46,7 +46,7 @@ jobs:
           chmod +x "$GITHUB_WORKSPACE/gradlew"
 
       - name: Build Android APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug :tvApp:assembleDebug
 
       - name: Collect APKs
         run: |
@@ -54,6 +54,11 @@ jobs:
           find app/build/outputs -name "*.apk" | while read f; do
             base=$(basename "$f")
             newname="dd-${base#app-}"
+            cp "$f" "artifacts/${newname}"
+          done
+          find tvApp/build/outputs -name "*.apk" 2>/dev/null | while read f; do
+            base=$(basename "$f")
+            newname="dd-tv-${base#tvApp-}"
             cp "$f" "artifacts/${newname}"
           done
 

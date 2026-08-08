@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MiruDL.TV" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">#0EA5E9</item>
+        <item name="android:colorPrimaryDark">#0284C7</item>
+        <item name="android:colorAccent">#0EA5E9</item>
+        <item name="android:windowBackground">#1A1A2E</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>

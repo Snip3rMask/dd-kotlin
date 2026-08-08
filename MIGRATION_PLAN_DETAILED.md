@@ -446,7 +446,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 ## Phase 9 — Android TV
 
 - 9.1 `tvApp` module (or product flavor) depending on `:shared`,
-  placeholder launcher.
+  placeholder launcher. ✅
 - 9.2 Home screen with D-pad focus.
 - 9.3 Detail/episode list with D-pad focus.
 - 9.4 Downloads + Settings screens for TV.
@@ -549,7 +549,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 8.8 CI: Windows + Linux build jobs
 
 ### Phase 9 — Android TV
-- [ ] 9.1 tvApp module + placeholder launcher
+- [x] 9.1 tvApp module + placeholder launcher
 - [ ] 9.2 Home screen with D-pad focus
 - [ ] 9.3 Detail/episode list with D-pad focus
 - [ ] 9.4 Downloads + Settings screens for TV
