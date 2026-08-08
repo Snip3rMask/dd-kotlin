@@ -291,7 +291,7 @@ rework when they move to `commonMain`:
 
 - [x] 9.1 Create the `tvApp` module (or a TV product flavor of `app`),
       depending on `:shared`, with just a placeholder launcher screen.
-- [ ] 9.2 Port the Home screen to a TV-friendly Compose layout with D-pad
+- [x] 9.2 Port the Home screen to a TV-friendly Compose layout with D-pad
       focus handling.
 - [ ] 9.3 Port the Detail/episode-list screen with D-pad focus handling.
 - [ ] 9.4 Port Downloads + Settings screens for TV.

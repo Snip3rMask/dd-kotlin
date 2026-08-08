@@ -550,7 +550,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 
 ### Phase 9 — Android TV
 - [x] 9.1 tvApp module + placeholder launcher
-- [ ] 9.2 Home screen with D-pad focus
+- [x] 9.2 Home screen with D-pad focus
 - [ ] 9.3 Detail/episode list with D-pad focus
 - [ ] 9.4 Downloads + Settings screens for TV
 - [ ] 9.5 Leanback intent filter + banner asset
