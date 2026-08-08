@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    kotlin("plugin.compose")
     id("com.android.library")
 }
 
