@@ -282,7 +282,7 @@ rework when they move to `commonMain`:
       (placeholder window).
 - [x] 8.6 Port the Compose screens into `desktopApp`, one at a time, same
       order as Phase 6/7.
-- [ ] 8.7 Desktop-specific background download handling (background
+- [x] 8.7 Desktop-specific background download handling (background
       thread + system tray icon or simple in-window progress — no OS
       foreground-service concept to hook into).
 - [ ] 8.8 CI: add Windows + Linux build jobs.
@@ -624,4 +624,5 @@ rework when they move to `commonMain`:
 - 8.4 done: DesktopNetworkCheck.kt entry point verifies CIO engine via MiruClient.search(). Compiles via :shared:compileKotlinDesktop.
 - 8.5 done: desktopApp module created with Compose Desktop shell (Main.kt, 900x600 window, Home/Downloads/Settings tabs). CI compiles :desktopApp:compileKotlin.
 - 8.6 done: Shared Compose screens (AnimeGridScreen, DownloadsScreen, AsyncImage expect/actual) in shared/commonMain. desktopApp uses shared screens. Android app keeps its own screens.
+- 8.7 done: DesktopDownloadService with coroutine-based background downloads, startLoop/startDownload/cancelDownload API.
 (Add a line here each time a box is checked, e.g. "2026-08-01: Phase 0.1 done, shared module builds green.")

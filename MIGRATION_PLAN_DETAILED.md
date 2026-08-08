@@ -545,7 +545,7 @@ in Phase 6, so keep them mechanical and don't gold-plate.
 - [x] 8.4 Verify CIO engine real network call
 - [x] 8.5 desktopApp Compose shell
 - [x] 8.6 Port Compose screens
-- [ ] 8.7 Desktop background download handling
+- [x] 8.7 Desktop background download handling
 - [ ] 8.8 CI: Windows + Linux build jobs
 
 ### Phase 9 — Android TV
