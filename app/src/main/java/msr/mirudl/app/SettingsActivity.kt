@@ -1,7 +1,6 @@
 package msr.mirudl.app
 
 import android.content.Intent
-import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -114,7 +113,7 @@ class SettingsActivity : BaseActivity() {
                             startActivity(Intent(Intent.ACTION_VIEW,
                                 Uri.parse("https://github.com/msrofficial/MiruDL-App")))
                         } catch (_: Exception) {}
-                    }
+                    },
                     onDarkModeChanged = { recreate() }
                 )
             }
