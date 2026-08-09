@@ -176,7 +176,10 @@ class DetailActivity : BaseActivity() {
                 FolderRequiredDialog(
                     onOpenSettings = {
                         showFolderDialog = false
-                        startActivity(Intent(this, SettingsActivity::class.java))
+                        startActivity(Intent(this, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            putExtra(MainActivity.EXTRA_OPEN_TAB, MainActivity.TAB_SETTINGS)
+                        })
                         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                     },
                     onDismiss = { showFolderDialog = false }

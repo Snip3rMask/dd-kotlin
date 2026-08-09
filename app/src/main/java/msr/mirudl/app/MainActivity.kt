@@ -71,7 +71,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -181,8 +180,6 @@ class MainActivity : BaseActivity() {
         searchQuery = savedInstanceState?.getString("search_query") ?: ""
 
         setContent {
-            val currentTabState = remember { mutableIntStateOf(savedInstanceState?.getInt("current_tab", 0) ?: 0) }
-
             MaterialTheme {
                 val navBarColor = Color(0xFFF8F9FA)
                 val bottomBarBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -196,10 +193,9 @@ class MainActivity : BaseActivity() {
                             NavigationBarItem(
                                 icon = { Icon(painterResource(R.drawable.ic_home), contentDescription = "Home") },
                                 label = { Text("Home") },
-                                selected = currentTabState.intValue == 0,
+                                selected = currentTab == 0,
                                 onClick = {
-                                    if (currentTabState.intValue != 0) {
-                                        currentTabState.intValue = 0
+                                    if (currentTab != 0) {
                                         currentTab = 0
                                         loadPopular()
                                     }
@@ -208,10 +204,9 @@ class MainActivity : BaseActivity() {
                             NavigationBarItem(
                                 icon = { Icon(painterResource(R.drawable.ic_download), contentDescription = "Downloads") },
                                 label = { Text("Downloads") },
-                                selected = currentTabState.intValue == 1,
+                                selected = currentTab == 1,
                                 onClick = {
-                                    if (currentTabState.intValue != 1) {
-                                        currentTabState.intValue = 1
+                                    if (currentTab != 1) {
                                         currentTab = 1
                                         refreshDownloads()
                                     }
@@ -230,10 +225,9 @@ class MainActivity : BaseActivity() {
                                     }
                                 },
                                 label = { Text("Settings") },
-                                selected = currentTabState.intValue == 2,
+                                selected = currentTab == 2,
                                 onClick = {
-                                    if (currentTabState.intValue != 2) {
-                                        currentTabState.intValue = 2
+                                    if (currentTab != 2) {
                                         currentTab = 2
                                         updateFolderDisplay()
                                     }
@@ -242,7 +236,7 @@ class MainActivity : BaseActivity() {
                         }
                     }
                 ) { padding ->
-                    when (currentTabState.intValue) {
+                    when (currentTab) {
                         0 -> HomeTabContent(
                             searchQuery = searchQuery,
                             onSearchQueryChange = { searchQuery = it },
@@ -1263,6 +1257,7 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        reloadSettingsState()
         startPeriodicRefresh()
         updateCrashBadge()
     }
@@ -1291,5 +1286,28 @@ class MainActivity : BaseActivity() {
         crashBadgeVisible = CrashLogger.hasNewCrash(this)
     }
 
+    private fun reloadSettingsState() {
+        isDarkMode = StorageSettings.isDarkTheme(storage)
+        parallelSegments = StorageSettings.getParallelSegments(storage)
+        concurrentDownloads = StorageSettings.getConcurrentDownloads(storage)
+        preferredQuality = StorageSettings.getPreferredQuality(storage)
+        preferredLanguage = StorageSettings.getPreferredLanguage(storage)
+        updateFolderDisplay()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getIntExtra(EXTRA_OPEN_TAB, -1) == TAB_SETTINGS) {
+            currentTab = TAB_SETTINGS
+            reloadSettingsState()
+        }
+    }
+
     private fun dp(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
+    companion object {
+        const val EXTRA_OPEN_TAB = "open_tab"
+        const val TAB_SETTINGS = 2
+    }
 }

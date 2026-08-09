@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.withPermit
 import msr.mirudl.shared.model.DownloadRecord
 import msr.mirudl.shared.network.HlsParser
 import msr.mirudl.shared.network.HttpClientProvider
+import msr.mirudl.shared.network.MiruClient
 import msr.mirudl.shared.storage.AppStorage
 import msr.mirudl.shared.storage.DownloadEntryStore
 import java.io.OutputStream
@@ -96,7 +97,15 @@ object HlsDownloader {
             ?: throw IOException("Cannot create temp dir")
 
         // 7. Download segments
-        downloadSegments(segments, storage, tempDir, HlsParser.clampParallel(parallelSegments), progress, cancel)
+        downloadSegments(
+            segments,
+            storage,
+            tempDir,
+            HlsParser.clampParallel(parallelSegments),
+            currentUrl,
+            progress,
+            cancel
+        )
 
         // 8. Cancel check after download
         if (cancel != null && cancel.isCancelled()) {
@@ -117,7 +126,7 @@ object HlsDownloader {
             ?: throw IOException("Cannot open output stream")
 
         try {
-            if (mapUrl != null) writeUrlToStream(mapUrl, out)
+            if (mapUrl != null) writeUrlToStream(mapUrl, currentUrl, out)
             for (i in segments.indices) {
                 val segPath = "$tempDir/seg_$i.ts"
                 val segInput = storage.openInput(segPath) ?: continue
@@ -171,11 +180,8 @@ object HlsDownloader {
 
     // ==================== WRITE URL TO STREAM ====================
 
-    private suspend fun writeUrlToStream(url: String, out: OutputStream) {
-        val data = downloadBytes(url)
-        if (data.isNotEmpty()) {
-            out.write(data)
-        }
+    private suspend fun writeUrlToStream(url: String, referer: String, out: OutputStream) {
+        out.write(downloadBytes(url, referer))
     }
 
     // ==================== DOWNLOAD RECORD ====================
@@ -202,26 +208,22 @@ object HlsDownloader {
     // ==================== BYTE FETCH ====================
 
     /**
-     * Downloads a single URL and returns the bytes.
-     * Returns an empty array on failure (matching the Java original).
+     * Downloads a single URL and returns the bytes. Failures are propagated so
+     * a partial or blocked stream cannot be reported as a completed download.
      */
-    suspend fun downloadBytes(url: String): ByteArray {
-        return try {
-            val client = HttpClientProvider.get()
-            val response = client.get(url) {
-                headers {
-                    append(HttpHeaders.UserAgent, "Mozilla/5.0")
-                }
+    suspend fun downloadBytes(url: String, referer: String? = null): ByteArray {
+        val response = HttpClientProvider.get().get(url) {
+            headers {
+                append(HttpHeaders.UserAgent, BROWSER_USER_AGENT)
+                append(HttpHeaders.Accept, "*/*")
+                append(HttpHeaders.Referer, referer ?: "${MiruClient.BASE}/")
             }
-            if (response.status.value in 200..299) {
-                response.bodyAsText(Charsets.ISO_8859_1)
-                    .toByteArray(Charsets.ISO_8859_1)
-            } else {
-                ByteArray(0)
-            }
-        } catch (_: Exception) {
-            ByteArray(0)
         }
+        if (response.status.value !in 200..299) {
+            throw IOException("HTTP ${response.status.value} while downloading media")
+        }
+        return response.bodyAsText(Charsets.ISO_8859_1)
+            .toByteArray(Charsets.ISO_8859_1)
     }
 
     // ==================== SEGMENT DOWNLOAD LOOP ====================
@@ -236,6 +238,7 @@ object HlsDownloader {
         storage: FileStorage,
         tempDir: String,
         parallel: Int,
+        mediaReferer: String,
         progress: ProgressListener?,
         cancel: CancelCheck?
     ) {
@@ -276,14 +279,12 @@ object HlsDownloader {
                     launch(Dispatchers.Default) {
                         semaphore.withPermit {
                             if (cancel?.isCancelled() != true) {
-                                try {
-                                    val data = downloadBytes(url)
-                                    totalBytes.addAndGet(data.size.toLong())
-                                    val segPath = "$tempDir/seg_$idx.ts"
-                                    storage.openOutput(segPath)?.use { out: OutputStream ->
-                                        out.write(data)
-                                    }
-                                } catch (_: Exception) {}
+                                val data = downloadBytes(url, referer = mediaReferer)
+                                totalBytes.addAndGet(data.size.toLong())
+                                val segPath = "$tempDir/seg_$idx.ts"
+                                val output = storage.openOutput(segPath)
+                                    ?: throw IOException("Cannot write media segment ${idx + 1}")
+                                output.use { out: OutputStream -> out.write(data) }
                             }
                             val current = done.incrementAndGet()
                             progress?.onProgress(
@@ -305,4 +306,8 @@ object HlsDownloader {
         if (value < 1) return 1
         return minOf(value, MAX_PARALLEL)
     }
+
+    private const val BROWSER_USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 }
