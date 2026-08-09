@@ -34,7 +34,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-okhttp:3.5.1")
+                implementation("io.ktor:ktor-client-cio:3.5.1")
 
                 // SAF (DocumentFile) for the download engine's file storage
                 // (same version as the app module).
