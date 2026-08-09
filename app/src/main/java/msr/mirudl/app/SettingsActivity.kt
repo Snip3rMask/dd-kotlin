@@ -603,7 +603,6 @@ private fun AboutCard(
 @Composable
 private fun DeveloperCard(
     onGitHub: () -> Unit,
-    onDarkModeChanged: () -> Unit,
     onDeveloper: () -> Unit
 ) {
     CardColumn {
