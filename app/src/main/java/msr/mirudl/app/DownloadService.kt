@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -154,10 +155,26 @@ class DownloadService : Service() {
                 completedCount.incrementAndGet()
                 pushNotif(buildNotif(job, "\u2713 ${job.episodeTitle} Done", 100, true))
             }
+        } catch (e: CancellationException) {
+            try {
+                if (job.cancelled) {
+                    DownloadManager.cancel(job)
+                    cancelledCount.incrementAndGet()
+                    pushNotif(buildNotif(job, "\u2716 ${job.episodeTitle} Cancelled", 0, true))
+                } else {
+                    val msg = e.cause?.message ?: e.message ?: "Download cancelled"
+                    DownloadManager.fail(job, msg)
+                    failedCount.incrementAndGet()
+                    pushNotif(buildNotif(job, "\u2716 ${job.episodeTitle} $msg", 0, true))
+                }
+            } catch (_: Exception) {}
         } catch (e: Exception) {
             try {
                 val msg = e.message ?: "Failed"
-                if (msg.contains("cancelled by user") || msg.contains("Cancelled") || job.cancelled) {
+                if (msg.contains("cancelled by user", ignoreCase = true) ||
+                    msg.contains("cancelled", ignoreCase = true) ||
+                    job.cancelled
+                ) {
                     DownloadManager.cancel(job)
                     cancelledCount.incrementAndGet()
                 } else {

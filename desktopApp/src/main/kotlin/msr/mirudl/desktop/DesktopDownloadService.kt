@@ -1,6 +1,7 @@
 package msr.mirudl.desktop
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
 import msr.mirudl.shared.download.DownloadManager
 import msr.mirudl.shared.download.HlsDownloader
 import msr.mirudl.shared.download.Job
@@ -67,6 +68,15 @@ object DesktopDownloadService {
                 }
             )
             DownloadManager.complete(job, outputUri)
+        } catch (e: CancellationException) {
+            if (job.cancelled) {
+                DownloadManager.cancel(job)
+            } else {
+                DownloadManager.fail(
+                    job,
+                    e.cause?.message ?: e.message ?: "Download cancelled"
+                )
+            }
         } catch (e: Exception) {
             DownloadManager.fail(job, e.message ?: "Download failed")
         }

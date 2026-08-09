@@ -248,6 +248,7 @@ object HlsDownloader {
         val clampedParallel = clampParallel(parallel)
         val done = java.util.concurrent.atomic.AtomicInteger(0)
         val totalBytes = AtomicLong(0)
+        val firstFailure = java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
 
         val tickerScope = CoroutineScope(Dispatchers.Default)
         val tickerJob = tickerScope.launch {
@@ -278,26 +279,46 @@ object HlsDownloader {
                     if (cancel?.isCancelled() == true) break
                     launch(Dispatchers.Default) {
                         semaphore.withPermit {
-                            if (cancel?.isCancelled() != true) {
+                            var completed = false
+                            try {
+                                if (cancel?.isCancelled() == true) return@withPermit
                                 val data = downloadBytes(url, referer = mediaReferer)
                                 totalBytes.addAndGet(data.size.toLong())
                                 val segPath = "$tempDir/seg_$idx.ts"
                                 val output = storage.openOutput(segPath)
                                     ?: throw IOException("Cannot write media segment ${idx + 1}")
                                 output.use { out: OutputStream -> out.write(data) }
+                                completed = true
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (t: Throwable) {
+                                if (firstFailure.compareAndSet(null, t)) {
+                                    this@coroutineScope.cancel("Segment download failed", t)
+                                }
+                            } finally {
+                                if (completed) {
+                                    val current = done.incrementAndGet()
+                                    progress?.onProgress(
+                                        current * 100 / total, current, total
+                                    )
+                                }
                             }
-                            val current = done.incrementAndGet()
-                            progress?.onProgress(
-                                current * 100 / total, current, total
-                            )
                         }
                     }
                 }
             }
+        } catch (e: CancellationException) {
+            val failure = firstFailure.get()
+            if (failure != null) throw failure
+            throw e
         } finally {
-            tickerJob.cancelAndJoin()
-            progress?.onSpeed(0)
+            withContext(NonCancellable) {
+                tickerJob.cancelAndJoin()
+                progress?.onSpeed(0)
+            }
         }
+
+        firstFailure.get()?.let { throw it }
     }
 
     // ==================== HELPERS ====================
