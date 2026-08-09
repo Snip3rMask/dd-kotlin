@@ -216,7 +216,7 @@ object HlsDownloader {
             headers {
                 append(HttpHeaders.UserAgent, BROWSER_USER_AGENT)
                 append(HttpHeaders.Accept, "*/*")
-                append(HttpHeaders.Referer, referer ?: "${MiruClient.BASE}/")
+                append(HttpHeaders.Referrer, referer ?: "${MiruClient.BASE}/")
             }
         }
         if (response.status.value !in 200..299) {
