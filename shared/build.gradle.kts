@@ -19,7 +19,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-core:3.5.1")
+                implementation("io.ktor:ktor-client-core:3.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
                 // Compose Multiplatform (shared UI screens)
                 implementation("org.jetbrains.compose.material3:material3:1.7.1")
@@ -34,7 +34,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-cio:3.5.1")
+                implementation("io.ktor:ktor-client-cio:3.0.3")
 
                 // SAF (DocumentFile) for the download engine's file storage
                 // (same version as the app module).
@@ -43,7 +43,7 @@ kotlin {
         }
         val desktopMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-cio:3.5.1")
+                implementation("io.ktor:ktor-client-cio:3.0.3")
             }
         }
     }
