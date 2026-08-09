@@ -20,7 +20,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-core:3.0.3")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
                 // Compose Multiplatform (shared UI screens)
                 implementation("org.jetbrains.compose.material3:material3:1.7.1")
                 implementation("org.jetbrains.compose.foundation:foundation:1.7.1")
